@@ -102,9 +102,11 @@ if (tg) {
   tg.ready();
   tg.expand();
 
-  // Полностью скрываем системную кнопку Telegram
   if (tg.MainButton) {
     tg.MainButton.hide();
+    tg.MainButton.setText('');
+    tg.MainButton.offClick(processCalculation);
+    tg.MainButton.disable();
   }
 }
 
