@@ -1,14 +1,26 @@
 const tg = window.Telegram?.WebApp;
 
-if (tg) {
-  tg.ready();
-  tg.expand();
-}
-
 const form = document.getElementById('calorie-form');
 const resultBlock = document.getElementById('result');
 const bmrValue = document.getElementById('bmr-value');
 const caloriesValue = document.getElementById('calories-value');
+const errorBox = document.getElementById('error-box');
+const errorText = document.getElementById('error-text');
+const webButton = document.getElementById('web-button');
+
+function applyTelegramTheme() {
+  if (!tg) return;
+
+  const theme = tg.themeParams || {};
+  const root = document.documentElement;
+
+  if (theme.bg_color) root.style.setProperty('--tg-bg', theme.bg_color);
+  if (theme.text_color) root.style.setProperty('--tg-text', theme.text_color);
+  if (theme.hint_color) root.style.setProperty('--tg-hint', theme.hint_color);
+  if (theme.button_color) root.style.setProperty('--tg-button', theme.button_color);
+  if (theme.button_text_color) root.style.setProperty('--tg-button-text', theme.button_text_color);
+  if (theme.secondary_bg_color) root.style.setProperty('--tg-card', theme.secondary_bg_color);
+}
 
 function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
   let bmr;
@@ -28,29 +40,93 @@ function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
   };
 }
 
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
+function showError(message) {
+  errorText.textContent = message;
+  errorBox.classList.remove('hidden');
+}
 
-  const sex = document.getElementById('sex').value;
-  const age = Number(document.getElementById('age').value);
-  const heightCm = Number(document.getElementById('height').value);
-  const weightKg = Number(document.getElementById('weight').value);
-  const activity = Number(document.getElementById('activity').value);
+function hideError() {
+  errorText.textContent = '';
+  errorBox.classList.add('hidden');
+}
 
-  if (!age || !heightCm || !weightKg || !activity) {
-    alert('Заполните все поля корректно');
-    return;
+function readFormData() {
+  return {
+    sex: document.getElementById('sex').value,
+    age: Number(document.getElementById('age').value),
+    heightCm: Number(document.getElementById('height').value),
+    weightKg: Number(document.getElementById('weight').value),
+    activity: Number(document.getElementById('activity').value),
+  };
+}
+
+function validate(data) {
+  if (!data.age || !data.heightCm || !data.weightKg || !data.activity) {
+    return 'Все поля обязательны.';
   }
 
-  const result = calculateCalories({
-    sex,
-    age,
-    heightCm,
-    weightKg,
-    activity,
-  });
+  if (data.age < 1 || data.age > 120) {
+    return 'Возраст должен быть в диапазоне 1–120.';
+  }
 
+  if (data.heightCm < 50 || data.heightCm > 250) {
+    return 'Рост должен быть в диапазоне 50–250 см.';
+  }
+
+  if (data.weightKg < 20 || data.weightKg > 400) {
+    return 'Вес должен быть в диапазоне 20–400 кг.';
+  }
+
+  return null;
+}
+
+function renderResult(result) {
   bmrValue.textContent = result.bmr;
   caloriesValue.textContent = result.calories;
   resultBlock.classList.remove('hidden');
+}
+
+function processCalculation() {
+  hideError();
+
+  const data = readFormData();
+  const validationError = validate(data);
+
+  if (validationError) {
+    resultBlock.classList.add('hidden');
+    showError(validationError);
+    return;
+  }
+
+  const result = calculateCalories(data);
+  renderResult(result);
+
+  if (tg?.MainButton) {
+    tg.MainButton.setText(`Готово: ${result.calories} ккал`);
+    tg.MainButton.show();
+  }
+}
+
+if (tg) {
+  tg.ready();
+  tg.expand();
+  applyTelegramTheme();
+
+  if (tg.MainButton) {
+    tg.MainButton.setText('Рассчитать');
+    tg.MainButton.onClick(processCalculation);
+    tg.MainButton.show();
+  }
+
+  if (tg.onEvent) {
+    tg.onEvent('themeChanged', applyTelegramTheme);
+  }
+
+  // Обычную кнопку оставляем как fallback
+  webButton.style.display = 'none';
+}
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  processCalculation();
 });

@@ -47,14 +47,19 @@
         </select>
       </label>
 
-      <button type="submit">Рассчитать</button>
+      <button id="web-button" type="submit">Рассчитать</button>
     </form>
 
     <section id="result" class="card result hidden">
       <h2>Результат</h2>
       <p><strong>Базовый обмен (BMR):</strong> <span id="bmr-value">—</span> ккал</p>
       <p><strong>Суточная норма калорий:</strong> <span id="calories-value">—</span> ккал</p>
-      <p class="note">Результат является ориентировочной оценкой.</p>
+      <p class="note">Результат является ориентировочной оценкой, а не медицинским заключением.</p>
+    </section>
+
+    <section id="error-box" class="card error hidden">
+      <strong>Проверьте ввод:</strong>
+      <p id="error-text">—</p>
     </section>
   </main>
 

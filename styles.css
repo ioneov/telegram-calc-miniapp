@@ -2,36 +2,47 @@
   box-sizing: border-box;
 }
 
+:root {
+  --tg-bg: #f3f4f6;
+  --tg-text: #111827;
+  --tg-hint: #6b7280;
+  --tg-button: #2563eb;
+  --tg-button-text: #ffffff;
+  --tg-card: #ffffff;
+  --tg-border: #d1d5db;
+  --tg-danger: #b91c1c;
+}
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #f3f4f6;
-  color: #111827;
+  background: var(--tg-bg);
+  color: var(--tg-text);
 }
 
 .container {
   max-width: 640px;
   margin: 0 auto;
-  padding: 24px 16px 40px;
+  padding: 20px 16px 40px;
 }
 
 h1 {
-  margin-bottom: 8px;
+  margin: 0 0 8px;
   font-size: 28px;
 }
 
 .subtitle {
-  margin-top: 0;
-  margin-bottom: 20px;
-  color: #4b5563;
+  margin: 0 0 20px;
+  color: var(--tg-hint);
 }
 
 .card {
-  background: #ffffff;
+  background: var(--tg-card);
   border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   margin-bottom: 16px;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 label {
@@ -52,20 +63,17 @@ button {
 
 input,
 select {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--tg-border);
   background: #fff;
+  color: var(--tg-text);
 }
 
 button {
   border: none;
-  background: #2563eb;
-  color: white;
+  background: var(--tg-button);
+  color: var(--tg-button-text);
   font-weight: 700;
   cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.95;
 }
 
 .result h2 {
@@ -73,8 +81,17 @@ button:hover {
 }
 
 .note {
-  color: #6b7280;
+  color: var(--tg-hint);
   font-size: 14px;
+}
+
+.error {
+  border: 1px solid rgba(185, 28, 28, 0.2);
+}
+
+.error p {
+  color: var(--tg-danger);
+  margin-bottom: 0;
 }
 
 .hidden {
