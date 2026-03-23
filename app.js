@@ -4,7 +4,6 @@ const form = document.getElementById('calorie-form');
 const resultBlock = document.getElementById('result');
 const errorBox = document.getElementById('error-box');
 const errorText = document.getElementById('error-text');
-const webButton = document.getElementById('web-button');
 const bannerCalcBtn = document.getElementById('banner-calc-btn');
 
 const bmrValue = document.getElementById('bmr-value');
@@ -97,21 +96,15 @@ function processCalculation() {
 
   const result = calculateCalories(data);
   renderResult(result);
-
-  if (tg?.MainButton) {
-    tg.MainButton.setText(`Поддержка: ${result.maintain} ккал`);
-    tg.MainButton.show();
-  }
 }
 
 if (tg) {
   tg.ready();
   tg.expand();
 
+  // Полностью скрываем системную кнопку Telegram
   if (tg.MainButton) {
-    tg.MainButton.setText('Рассчитать');
-    tg.MainButton.onClick(processCalculation);
-    tg.MainButton.show();
+    tg.MainButton.hide();
   }
 }
 
