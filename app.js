@@ -2,11 +2,15 @@ const tg = window.Telegram?.WebApp;
 
 const form = document.getElementById('calorie-form');
 const resultBlock = document.getElementById('result');
-const bmrValue = document.getElementById('bmr-value');
-const caloriesValue = document.getElementById('calories-value');
 const errorBox = document.getElementById('error-box');
 const errorText = document.getElementById('error-text');
 const webButton = document.getElementById('web-button');
+const bannerCalcBtn = document.getElementById('banner-calc-btn');
+
+const bmrValue = document.getElementById('bmr-value');
+const cutValue = document.getElementById('cut-value');
+const maintainValue = document.getElementById('maintain-value');
+const bulkValue = document.getElementById('bulk-value');
 
 function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
   let bmr;
@@ -18,11 +22,15 @@ function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
     bmr = 447.593 + 9.247 * weightKg + 3.098 * heightCm - 4.330 * age;
   }
 
-  const calories = bmr * activity;
+  const maintain = bmr * activity;
+  const cut = maintain * 0.85;
+  const bulk = maintain * 1.15;
 
   return {
     bmr: Math.round(bmr),
-    calories: Math.round(calories),
+    cut: Math.round(cut),
+    maintain: Math.round(maintain),
+    bulk: Math.round(bulk),
   };
 }
 
@@ -68,7 +76,10 @@ function validate(data) {
 
 function renderResult(result) {
   bmrValue.textContent = result.bmr;
-  caloriesValue.textContent = result.calories;
+  cutValue.textContent = result.cut;
+  maintainValue.textContent = result.maintain;
+  bulkValue.textContent = result.bulk;
+
   resultBlock.classList.remove('hidden');
 }
 
@@ -88,7 +99,7 @@ function processCalculation() {
   renderResult(result);
 
   if (tg?.MainButton) {
-    tg.MainButton.setText(`Готово: ${result.calories} ккал`);
+    tg.MainButton.setText(`Поддержка: ${result.maintain} ккал`);
     tg.MainButton.show();
   }
 }
@@ -102,11 +113,13 @@ if (tg) {
     tg.MainButton.onClick(processCalculation);
     tg.MainButton.show();
   }
-
-  webButton.style.display = 'none';
 }
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
   processCalculation();
 });
+
+if (bannerCalcBtn) {
+  bannerCalcBtn.addEventListener('click', processCalculation);
+}
