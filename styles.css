@@ -16,6 +16,9 @@
   --danger: #b42318;
   --danger-bg: #fdecec;
   --white: #ffffff;
+  --tab-bg: #e9eff3;
+  --running-bg: #cfe8b7;
+  --running-border: #304d1f;
 }
 
 html,
@@ -43,7 +46,47 @@ main,
 .app-shell {
   max-width: 1420px;
   margin: 0 auto;
-  padding: 24px 16px 120px;
+  padding: 16px 16px 120px;
+}
+
+.tabs-card {
+  margin-bottom: 18px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: var(--white);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 8px;
+}
+
+.tab-button {
+  border: 1px solid var(--panel-border);
+  background: var(--tab-bg);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.tab-button.active {
+  background: var(--blue);
+  color: var(--white);
+  border-color: var(--blue);
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
 }
 
 .calc-card {
@@ -308,6 +351,109 @@ select:focus {
   color: var(--muted);
 }
 
+.running-card {
+  background: transparent;
+}
+
+.running-inner {
+  background: var(--running-bg);
+  border: 3px solid var(--running-border);
+  border-radius: 14px;
+  padding: 18px 16px;
+  max-width: 760px;
+}
+
+.running-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.running-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 10px;
+  align-items: center;
+}
+
+.running-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.running-label {
+  min-width: 110px;
+  font-family: 'Geologica', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.running-unit {
+  font-size: 14px;
+  color: #000000;
+}
+
+.running-form select,
+.running-form input {
+  width: auto;
+  min-width: 54px;
+  padding: 6px 8px;
+  border-radius: 0;
+  border: 1px solid #7f8f72;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.running-form input {
+  min-width: 62px;
+}
+
+.running-separator {
+  height: 1px;
+  background: rgba(48, 77, 31, 0.25);
+  margin: 14px 0;
+}
+
+.running-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.running-result-row {
+  display: grid;
+  grid-template-columns: 240px 1fr 90px;
+  align-items: center;
+  gap: 10px;
+}
+
+.running-result-label {
+  font-family: 'Geologica', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.running-result-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000000;
+  text-align: center;
+}
+
+.running-result-unit {
+  font-family: 'Geologica', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.running-error {
+  margin-top: 16px;
+}
+
 .hidden {
   display: none;
 }
@@ -327,6 +473,14 @@ select:focus {
 }
 
 @media (max-width: 820px) {
+  .app-shell {
+    padding: 12px 12px 120px;
+  }
+
+  .tabs {
+    flex-direction: column;
+  }
+
   .fields-grid {
     grid-template-columns: 1fr;
   }
@@ -356,5 +510,32 @@ select:focus {
 
   .macros-head {
     font-size: 20px;
+  }
+
+  .running-inner {
+    padding: 14px 12px;
+  }
+
+  .running-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .running-inline {
+    flex-wrap: wrap;
+  }
+
+  .running-label {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .running-result-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .running-result-value {
+    text-align: left;
   }
 }

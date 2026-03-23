@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#f7f7f7">
-  <title>Суточная норма калорий</title>
+  <title>Калькуляторы</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -17,146 +17,361 @@
 </head>
 <body>
   <main class="app-shell">
-    <section class="calc-card">
-      <div class="form-side">
-        <form id="calorie-form" class="form-stack">
-          <div class="fields-grid">
-            <label>
-              <span class="field-label">Пол</span>
-              <select id="sex" required>
-                <option value="male">Мужчина</option>
-                <option value="female">Женщина</option>
-              </select>
-            </label>
-
-            <label>
-              <span class="field-label">Возраст</span>
-              <input id="age" type="number" min="1" max="120" required />
-            </label>
-
-            <label>
-              <span class="field-label">Рост, см</span>
-              <input id="height" type="number" min="50" max="250" required />
-            </label>
-
-            <label>
-              <span class="field-label">Вес, кг</span>
-              <input id="weight" type="number" min="20" max="400" step="0.1" required />
-            </label>
-
-            <label class="full-width">
-              <span class="field-label">Активность</span>
-              <select id="activity" required>
-                <option value="1.2">Минимальная — сидячий образ жизни</option>
-                <option value="1.375">Низкая — 1–3 тренировки в неделю</option>
-                <option value="1.55" selected>Средняя — 3–5 тренировок в неделю</option>
-                <option value="1.725">Высокая — 6–7 тренировок в неделю</option>
-                <option value="1.9">Очень высокая — ежедневный спорт / физический труд</option>
-              </select>
-            </label>
-          </div>
-        </form>
-
-        <section id="error-box" class="error-box hidden">
-          <p id="error-text">—</p>
-        </section>
+    <section class="tabs-card">
+      <div class="tabs" role="tablist" aria-label="Разделы калькуляторов">
+        <button
+          type="button"
+          class="tab-button active"
+          id="tab-calories-btn"
+          data-tab="calories"
+          role="tab"
+          aria-selected="true"
+        >
+          Расчет калорий
+        </button>
+        <button
+          type="button"
+          class="tab-button"
+          id="tab-running-btn"
+          data-tab="running"
+          role="tab"
+          aria-selected="false"
+        >
+          Калькулятор темпа и скорости бега
+        </button>
       </div>
+    </section>
 
-      <section id="result" class="result-banner hidden">
-        <div class="banner-title-wrap">
-          <h1 class="banner-title">Ваша суточная норма калорий</h1>
+    <section id="tab-calories" class="tab-panel active" role="tabpanel">
+      <section class="calc-card">
+        <div class="form-side">
+          <form id="calorie-form" class="form-stack">
+            <div class="fields-grid">
+              <label>
+                <span class="field-label">Пол</span>
+                <select id="sex" required>
+                  <option value="male">Мужчина</option>
+                  <option value="female">Женщина</option>
+                </select>
+              </label>
+
+              <label>
+                <span class="field-label">Возраст</span>
+                <input id="age" type="number" min="1" max="120" required />
+              </label>
+
+              <label>
+                <span class="field-label">Рост, см</span>
+                <input id="height" type="number" min="50" max="250" required />
+              </label>
+
+              <label>
+                <span class="field-label">Вес, кг</span>
+                <input id="weight" type="number" min="20" max="400" step="0.1" required />
+              </label>
+
+              <label class="full-width">
+                <span class="field-label">Активность</span>
+                <select id="activity" required>
+                  <option value="1.2">Минимальная — сидячий образ жизни</option>
+                  <option value="1.375">Низкая — 1–3 тренировки в неделю</option>
+                  <option value="1.55" selected>Средняя — 3–5 тренировок в неделю</option>
+                  <option value="1.725">Высокая — 6–7 тренировок в неделю</option>
+                  <option value="1.9">Очень высокая — ежедневный спорт / физический труд</option>
+                </select>
+              </label>
+            </div>
+          </form>
+
+          <section id="error-box" class="error-box hidden">
+            <p id="error-text">—</p>
+          </section>
         </div>
 
-        <div class="metrics-wrap">
-          <div class="metric-block">
-            <div class="metric-label metric-label-inline">
-              <span>Базовый обмен (BMR)</span>
-              <span class="tooltip-wrap">
-                <button type="button" class="tooltip-trigger" aria-label="Что такое BMR?">?</button>
-                <span class="tooltip-text">
-                  BMR – базовый метаболический обмен (Basal Metabolic Requirement), то есть количество калорий, которые ваш организм сжигает каждый день, чтобы поддерживать вас в живом состоянии
+        <section id="result" class="result-banner hidden">
+          <div class="banner-title-wrap">
+            <h1 class="banner-title">Ваша суточная норма калорий</h1>
+          </div>
+
+          <div class="metrics-wrap">
+            <div class="metric-block">
+              <div class="metric-label metric-label-inline">
+                <span>Базовый обмен (BMR)</span>
+                <span class="tooltip-wrap">
+                  <button type="button" class="tooltip-trigger" aria-label="Что такое BMR?">?</button>
+                  <span class="tooltip-text">
+                    BMR – базовый метаболический обмен (Basal Metabolic Requirement), то есть количество калорий, которые ваш организм сжигает каждый день, чтобы поддерживать вас в живом состоянии
+                  </span>
                 </span>
-              </span>
+              </div>
+              <div class="metric-value"><span id="bmr-value">—</span> ккал</div>
             </div>
-            <div class="metric-value"><span id="bmr-value">—</span> ккал</div>
-          </div>
 
-          <div class="metric-block">
-            <div class="metric-label">Сброс веса</div>
-            <div class="metric-value"><span id="cut-value">—</span> ккал</div>
-            <div class="metric-subtext">Диапазон: -10% … -20%</div>
-          </div>
+            <div class="metric-block">
+              <div class="metric-label">Сброс веса</div>
+              <div class="metric-value"><span id="cut-value">—</span> ккал</div>
+              <div class="metric-subtext">Диапазон: -10% … -20%</div>
+            </div>
 
-          <div class="metric-block">
-            <div class="metric-label">Поддержание</div>
-            <div class="metric-value"><span id="maintain-value">—</span> ккал</div>
-            <div class="metric-subtext">Базовая поддерживающая норма</div>
-          </div>
+            <div class="metric-block">
+              <div class="metric-label">Поддержание</div>
+              <div class="metric-value"><span id="maintain-value">—</span> ккал</div>
+              <div class="metric-subtext">Базовая поддерживающая норма</div>
+            </div>
 
-          <div class="metric-block">
-            <div class="metric-label">Набор массы</div>
-            <div class="metric-value"><span id="bulk-value">—</span> ккал</div>
-            <div class="metric-subtext">Диапазон: +5% … +15%</div>
+            <div class="metric-block">
+              <div class="metric-label">Набор массы</div>
+              <div class="metric-value"><span id="bulk-value">—</span> ккал</div>
+              <div class="metric-subtext">Диапазон: +5% … +15%</div>
+            </div>
           </div>
-        </div>
+        </section>
+
+        <section id="macros-section" class="macros-section hidden">
+          <div class="macros-card">
+            <div class="macros-head">БЖУ по целям</div>
+
+            <div class="macros-grid">
+              <div class="macro-goal-card">
+                <div class="macro-goal-title">Сброс веса</div>
+                <div class="macro-row">
+                  <span class="macro-name">Белки</span>
+                  <span class="macro-value"><span id="cut-protein">—</span> г</span>
+                </div>
+                <div class="macro-row">
+                  <span class="macro-name">Жиры</span>
+                  <span class="macro-value"><span id="cut-fat">—</span> г</span>
+                </div>
+                <div class="macro-row">
+                  <span class="macro-name">Углеводы</span>
+                  <span class="macro-value"><span id="cut-carbs">—</span> г</span>
+                </div>
+                <div class="macro-note">Белки: 2.2 г/кг · Жиры: 0.8 г/кг</div>
+              </div>
+
+              <div class="macro-goal-card">
+                <div class="macro-goal-title">Поддержание</div>
+                <div class="macro-row">
+                  <span class="macro-name">Белки</span>
+                  <span class="macro-value"><span id="maintain-protein">—</span> г</span>
+                </div>
+                <div class="macro-row">
+                  <span class="macro-name">Жиры</span>
+                  <span class="macro-value"><span id="maintain-fat">—</span> г</span>
+                </div>
+                <div class="macro-row">
+                  <span class="macro-name">Углеводы</span>
+                  <span class="macro-value"><span id="maintain-carbs">—</span> г</span>
+                </div>
+                <div class="macro-note">Белки: 2.0 г/кг · Жиры: 0.9 г/кг</div>
+              </div>
+
+              <div class="macro-goal-card">
+                <div class="macro-goal-title">Набор массы</div>
+                <div class="macro-row">
+                  <span class="macro-name">Белки</span>
+                  <span class="macro-value"><span id="bulk-protein">—</span> г</span>
+                </div>
+                <div class="macro-row">
+                  <span class="macro-name">Жиры</span>
+                  <span class="macro-value"><span id="bulk-fat">—</span> г</span>
+                </div>
+                <div class="macro-row">
+                  <span class="macro-name">Углеводы</span>
+                  <span class="macro-value"><span id="bulk-carbs">—</span> г</span>
+                </div>
+                <div class="macro-note">Белки: 1.8 г/кг · Жиры: 0.9 г/кг</div>
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
+    </section>
 
-      <section id="macros-section" class="macros-section hidden">
-        <div class="macros-card">
-          <div class="macros-head">БЖУ по целям</div>
+    <section id="tab-running" class="tab-panel" role="tabpanel">
+      <section class="running-card">
+        <div class="running-inner">
+          <form id="running-form" class="running-form">
+            <div class="running-row">
+              <label class="running-inline">
+                <span class="running-label">Время бега:</span>
+                <select id="run-hours">
+                  <option value="0" selected>0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+                <span class="running-unit">час</span>
+              </label>
 
-          <div class="macros-grid">
-            <div class="macro-goal-card">
-              <div class="macro-goal-title">Сброс веса</div>
-              <div class="macro-row">
-                <span class="macro-name">Белки</span>
-                <span class="macro-value"><span id="cut-protein">—</span> г</span>
-              </div>
-              <div class="macro-row">
-                <span class="macro-name">Жиры</span>
-                <span class="macro-value"><span id="cut-fat">—</span> г</span>
-              </div>
-              <div class="macro-row">
-                <span class="macro-name">Углеводы</span>
-                <span class="macro-value"><span id="cut-carbs">—</span> г</span>
-              </div>
-              <div class="macro-note">Белки: 2.2 г/кг · Жиры: 0.8 г/кг</div>
+              <label class="running-inline">
+                <select id="run-minutes">
+                  <option value="0">00</option>
+                  <option value="1">01</option>
+                  <option value="2">02</option>
+                  <option value="3">03</option>
+                  <option value="4">04</option>
+                  <option value="5">05</option>
+                  <option value="6">06</option>
+                  <option value="7">07</option>
+                  <option value="8">08</option>
+                  <option value="9">09</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                  <option value="13">13</option>
+                  <option value="14">14</option>
+                  <option value="15">15</option>
+                  <option value="16">16</option>
+                  <option value="17">17</option>
+                  <option value="18">18</option>
+                  <option value="19">19</option>
+                  <option value="20">20</option>
+                  <option value="21">21</option>
+                  <option value="22">22</option>
+                  <option value="23">23</option>
+                  <option value="24">24</option>
+                  <option value="25">25</option>
+                  <option value="26">26</option>
+                  <option value="27">27</option>
+                  <option value="28">28</option>
+                  <option value="29">29</option>
+                  <option value="30">30</option>
+                  <option value="31">31</option>
+                  <option value="32">32</option>
+                  <option value="33">33</option>
+                  <option value="34">34</option>
+                  <option value="35">35</option>
+                  <option value="36">36</option>
+                  <option value="37">37</option>
+                  <option value="38">38</option>
+                  <option value="39">39</option>
+                  <option value="40">40</option>
+                  <option value="41">41</option>
+                  <option value="42">42</option>
+                  <option value="43">43</option>
+                  <option value="44">44</option>
+                  <option value="45">45</option>
+                  <option value="46">46</option>
+                  <option value="47">47</option>
+                  <option value="48">48</option>
+                  <option value="49">49</option>
+                  <option value="50">50</option>
+                  <option value="51">51</option>
+                  <option value="52">52</option>
+                  <option value="53">53</option>
+                  <option value="54">54</option>
+                  <option value="55">55</option>
+                  <option value="56">56</option>
+                  <option value="57">57</option>
+                  <option value="58">58</option>
+                  <option value="59">59</option>
+                </select>
+                <span class="running-unit">мин</span>
+              </label>
+
+              <label class="running-inline">
+                <select id="run-seconds">
+                  <option value="0">00</option>
+                  <option value="1">01</option>
+                  <option value="2">02</option>
+                  <option value="3">03</option>
+                  <option value="4">04</option>
+                  <option value="5">05</option>
+                  <option value="6">06</option>
+                  <option value="7">07</option>
+                  <option value="8">08</option>
+                  <option value="9">09</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                  <option value="13">13</option>
+                  <option value="14">14</option>
+                  <option value="15">15</option>
+                  <option value="16">16</option>
+                  <option value="17">17</option>
+                  <option value="18">18</option>
+                  <option value="19">19</option>
+                  <option value="20">20</option>
+                  <option value="21">21</option>
+                  <option value="22">22</option>
+                  <option value="23">23</option>
+                  <option value="24">24</option>
+                  <option value="25">25</option>
+                  <option value="26">26</option>
+                  <option value="27">27</option>
+                  <option value="28">28</option>
+                  <option value="29">29</option>
+                  <option value="30">30</option>
+                  <option value="31">31</option>
+                  <option value="32">32</option>
+                  <option value="33">33</option>
+                  <option value="34">34</option>
+                  <option value="35">35</option>
+                  <option value="36">36</option>
+                  <option value="37">37</option>
+                  <option value="38">38</option>
+                  <option value="39">39</option>
+                  <option value="40">40</option>
+                  <option value="41">41</option>
+                  <option value="42">42</option>
+                  <option value="43">43</option>
+                  <option value="44">44</option>
+                  <option value="45">45</option>
+                  <option value="46">46</option>
+                  <option value="47">47</option>
+                  <option value="48">48</option>
+                  <option value="49">49</option>
+                  <option value="50">50</option>
+                  <option value="51">51</option>
+                  <option value="52">52</option>
+                  <option value="53">53</option>
+                  <option value="54">54</option>
+                  <option value="55">55</option>
+                  <option value="56">56</option>
+                  <option value="57">57</option>
+                  <option value="58">58</option>
+                  <option value="59">59</option>
+                </select>
+                <span class="running-unit">сек</span>
+              </label>
             </div>
 
-            <div class="macro-goal-card">
-              <div class="macro-goal-title">Поддержание</div>
-              <div class="macro-row">
-                <span class="macro-name">Белки</span>
-                <span class="macro-value"><span id="maintain-protein">—</span> г</span>
-              </div>
-              <div class="macro-row">
-                <span class="macro-name">Жиры</span>
-                <span class="macro-value"><span id="maintain-fat">—</span> г</span>
-              </div>
-              <div class="macro-row">
-                <span class="macro-name">Углеводы</span>
-                <span class="macro-value"><span id="maintain-carbs">—</span> г</span>
-              </div>
-              <div class="macro-note">Белки: 2.0 г/кг · Жиры: 0.9 г/кг</div>
+            <div class="running-row">
+              <label class="running-inline">
+                <span class="running-label">Дистанция:</span>
+                <input id="run-km" type="number" min="0" step="1" value="0" />
+                <span class="running-unit">км</span>
+              </label>
+
+              <label class="running-inline">
+                <input id="run-meters" type="number" min="0" max="999" step="1" value="0" />
+                <span class="running-unit">метров</span>
+              </label>
+            </div>
+          </form>
+
+          <div class="running-separator"></div>
+
+          <div class="running-results">
+            <div class="running-result-row">
+              <span class="running-result-label">Темп бега (на 1 км):</span>
+              <span class="running-result-value" id="pace-value">-</span>
+              <span class="running-result-unit">мин:сек</span>
             </div>
 
-            <div class="macro-goal-card">
-              <div class="macro-goal-title">Набор массы</div>
-              <div class="macro-row">
-                <span class="macro-name">Белки</span>
-                <span class="macro-value"><span id="bulk-protein">—</span> г</span>
-              </div>
-              <div class="macro-row">
-                <span class="macro-name">Жиры</span>
-                <span class="macro-value"><span id="bulk-fat">—</span> г</span>
-              </div>
-              <div class="macro-row">
-                <span class="macro-name">Углеводы</span>
-                <span class="macro-value"><span id="bulk-carbs">—</span> г</span>
-              </div>
-              <div class="macro-note">Белки: 1.8 г/кг · Жиры: 0.9 г/кг</div>
+            <div class="running-result-row">
+              <span class="running-result-label">Скорость бега:</span>
+              <span class="running-result-value" id="speed-value">-</span>
+              <span class="running-result-unit">км/ч</span>
             </div>
           </div>
+
+          <section id="running-error-box" class="error-box hidden running-error">
+            <p id="running-error-text">—</p>
+          </section>
         </div>
       </section>
     </section>

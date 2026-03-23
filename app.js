@@ -1,5 +1,47 @@
 const tg = window.Telegram?.WebApp;
 
+/* -------------------- tabs -------------------- */
+const tabCaloriesBtn = document.getElementById('tab-calories-btn');
+const tabRunningBtn = document.getElementById('tab-running-btn');
+const tabCalories = document.getElementById('tab-calories');
+const tabRunning = document.getElementById('tab-running');
+
+let activeTab = 'calories';
+
+function updateMainButton() {
+  if (!tg?.MainButton) return;
+
+  if (activeTab === 'calories') {
+    tg.MainButton.setText('Рассчитать калории');
+  } else {
+    tg.MainButton.setText('Рассчитать темп и скорость');
+  }
+
+  tg.MainButton.show();
+  tg.MainButton.enable();
+}
+
+function switchTab(tabName) {
+  activeTab = tabName;
+
+  const isCalories = tabName === 'calories';
+
+  tabCaloriesBtn.classList.toggle('active', isCalories);
+  tabCaloriesBtn.setAttribute('aria-selected', String(isCalories));
+
+  tabRunningBtn.classList.toggle('active', !isCalories);
+  tabRunningBtn.setAttribute('aria-selected', String(!isCalories));
+
+  tabCalories.classList.toggle('active', isCalories);
+  tabRunning.classList.toggle('active', !isCalories);
+
+  updateMainButton();
+}
+
+tabCaloriesBtn.addEventListener('click', () => switchTab('calories'));
+tabRunningBtn.addEventListener('click', () => switchTab('running'));
+
+/* -------------------- calories -------------------- */
 const form = document.getElementById('calorie-form');
 const resultBlock = document.getElementById('result');
 const errorBox = document.getElementById('error-box');
@@ -153,7 +195,7 @@ function renderResult(result) {
   renderMacros(result.macros);
 }
 
-function processCalculation() {
+function processCaloriesCalculation() {
   hideError();
 
   const data = readFormData();
@@ -170,7 +212,7 @@ function processCalculation() {
   renderResult(result);
 
   if (tg?.MainButton) {
-    tg.MainButton.setText('Пересчитать');
+    tg.MainButton.setText('Пересчитать калории');
     tg.MainButton.show();
     tg.MainButton.enable();
   }
@@ -178,6 +220,110 @@ function processCalculation() {
   setTimeout(() => {
     resultBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 100);
+}
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  processCaloriesCalculation();
+});
+
+/* -------------------- running -------------------- */
+const runningForm = document.getElementById('running-form');
+const runningErrorBox = document.getElementById('running-error-box');
+const runningErrorText = document.getElementById('running-error-text');
+
+const paceValue = document.getElementById('pace-value');
+const speedValue = document.getElementById('speed-value');
+
+function showRunningError(message) {
+  runningErrorText.textContent = message;
+  runningErrorBox.classList.remove('hidden');
+}
+
+function hideRunningError() {
+  runningErrorText.textContent = '';
+  runningErrorBox.classList.add('hidden');
+}
+
+function pad2(num) {
+  return String(num).padStart(2, '0');
+}
+
+function readRunningData() {
+  const hours = Number(document.getElementById('run-hours').value);
+  const minutes = Number(document.getElementById('run-minutes').value);
+  const seconds = Number(document.getElementById('run-seconds').value);
+  const km = Number(document.getElementById('run-km').value);
+  const meters = Number(document.getElementById('run-meters').value);
+
+  return { hours, minutes, seconds, km, meters };
+}
+
+function validateRunningData(data) {
+  const totalSeconds = data.hours * 3600 + data.minutes * 60 + data.seconds;
+  const totalMeters = data.km * 1000 + data.meters;
+
+  if (totalSeconds <= 0) {
+    return 'Время бега должно быть больше нуля.';
+  }
+
+  if (totalMeters <= 0) {
+    return 'Дистанция должна быть больше нуля.';
+  }
+
+  if (data.meters < 0 || data.meters > 999) {
+    return 'Метров должно быть в диапазоне 0–999.';
+  }
+
+  return null;
+}
+
+function processRunningCalculation() {
+  hideRunningError();
+
+  const data = readRunningData();
+  const validationError = validateRunningData(data);
+
+  if (validationError) {
+    paceValue.textContent = '-';
+    speedValue.textContent = '-';
+    showRunningError(validationError);
+    return;
+  }
+
+  const totalSeconds = data.hours * 3600 + data.minutes * 60 + data.seconds;
+  const totalKm = data.km + data.meters / 1000;
+
+  const secondsPerKm = totalSeconds / totalKm;
+  const paceMinutes = Math.floor(secondsPerKm / 60);
+  const paceSeconds = Math.round(secondsPerKm % 60);
+
+  let normalizedPaceMinutes = paceMinutes;
+  let normalizedPaceSeconds = paceSeconds;
+
+  if (normalizedPaceSeconds === 60) {
+    normalizedPaceMinutes += 1;
+    normalizedPaceSeconds = 0;
+  }
+
+  const speed = totalKm / (totalSeconds / 3600);
+
+  paceValue.textContent = `${normalizedPaceMinutes}:${pad2(normalizedPaceSeconds)}`;
+  speedValue.textContent = speed.toFixed(2);
+}
+
+runningForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  processRunningCalculation();
+});
+
+/* -------------------- telegram -------------------- */
+function handleMainButtonClick() {
+  if (activeTab === 'calories') {
+    processCaloriesCalculation();
+  } else {
+    processRunningCalculation();
+  }
 }
 
 if (tg) {
@@ -193,15 +339,10 @@ if (tg) {
   } catch (e) {}
 
   if (tg.MainButton) {
-    tg.MainButton.setText('Рассчитать');
-    tg.MainButton.show();
-    tg.MainButton.enable();
-    tg.MainButton.offClick(processCalculation);
-    tg.MainButton.onClick(processCalculation);
+    updateMainButton();
+    tg.MainButton.offClick(handleMainButtonClick);
+    tg.MainButton.onClick(handleMainButtonClick);
   }
 }
 
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
-  processCalculation();
-});
+switchTab('calories');
