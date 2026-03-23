@@ -15,6 +15,7 @@
   --field-border: #c8d7df;
   --danger: #b42318;
   --danger-bg: #fdecec;
+  --white: #ffffff;
 }
 
 body {
@@ -36,7 +37,7 @@ body {
 }
 
 .form-side {
-  background: #ffffff;
+  background: var(--white);
   border: 1px solid var(--panel-border);
   border-radius: 14px;
   padding: 20px;
@@ -162,6 +163,13 @@ select:focus {
   white-space: nowrap;
 }
 
+.metric-subtext {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
 .tooltip-wrap {
   position: relative;
   display: inline-flex;
@@ -174,7 +182,7 @@ select:focus {
   min-width: 22px;
   border-radius: 50%;
   border: 1px solid #8aa1ad;
-  background: #ffffff;
+  background: var(--white);
   color: #50616c;
   font-size: 13px;
   font-weight: 700;
@@ -213,6 +221,77 @@ select:focus {
   transform: translateY(0);
 }
 
+.macros-section {
+  margin-top: 2px;
+}
+
+.macros-card {
+  background: var(--white);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.macros-head {
+  font-family: 'Geologica', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: var(--text);
+}
+
+.macros-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.macro-goal-card {
+  background: #f8fbfd;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.macro-goal-title {
+  font-family: 'Geologica', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--text);
+}
+
+.macro-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e6eef3;
+}
+
+.macro-row:last-of-type {
+  border-bottom: none;
+}
+
+.macro-name {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.macro-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.macro-note {
+  margin-top: 14px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 .hidden {
   display: none;
 }
@@ -224,6 +303,10 @@ select:focus {
 
   .metrics-wrap {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+
+  .macros-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -253,5 +336,9 @@ select:focus {
 
   .tooltip-text {
     width: min(320px, 80vw);
+  }
+
+  .macros-head {
+    font-size: 20px;
   }
 }

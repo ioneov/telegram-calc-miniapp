@@ -10,24 +10,81 @@ const cutValue = document.getElementById('cut-value');
 const maintainValue = document.getElementById('maintain-value');
 const bulkValue = document.getElementById('bulk-value');
 
-function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
-  let bmr;
+const macrosSection = document.getElementById('macros-section');
 
+const cutProteinValue = document.getElementById('cut-protein');
+const cutFatValue = document.getElementById('cut-fat');
+const cutCarbsValue = document.getElementById('cut-carbs');
+
+const maintainProteinValue = document.getElementById('maintain-protein');
+const maintainFatValue = document.getElementById('maintain-fat');
+const maintainCarbsValue = document.getElementById('maintain-carbs');
+
+const bulkProteinValue = document.getElementById('bulk-protein');
+const bulkFatValue = document.getElementById('bulk-fat');
+const bulkCarbsValue = document.getElementById('bulk-carbs');
+
+function round(value) {
+  return Math.round(value);
+}
+
+function formatRange(min, max) {
+  return `${round(min)}–${round(max)}`;
+}
+
+function calculateBmr({ sex, age, heightCm, weightKg }) {
   if (sex === 'male') {
-    bmr = 88.362 + 13.397 * weightKg + 4.799 * heightCm - 5.677 * age;
-  } else {
-    bmr = 447.593 + 9.247 * weightKg + 3.098 * heightCm - 4.330 * age;
+    return 88.362 + 13.397 * weightKg + 4.799 * heightCm - 5.677 * age;
   }
 
-  const maintain = bmr * activity;
-  const cut = maintain * 0.85;
-  const bulk = maintain * 1.15;
+  return 447.593 + 9.247 * weightKg + 3.098 * heightCm - 4.330 * age;
+}
+
+function calculateMacros(targetCalories, weightKg, proteinPerKg, fatPerKg) {
+  const proteinGrams = weightKg * proteinPerKg;
+  const fatGrams = weightKg * fatPerKg;
+
+  const caloriesFromProtein = proteinGrams * 4;
+  const caloriesFromFat = fatGrams * 9;
+  const remainingCalories = targetCalories - caloriesFromProtein - caloriesFromFat;
+  const carbsGrams = Math.max(0, remainingCalories / 4);
 
   return {
-    bmr: Math.round(bmr),
-    cut: Math.round(cut),
-    maintain: Math.round(maintain),
-    bulk: Math.round(bulk),
+    protein: round(proteinGrams),
+    fat: round(fatGrams),
+    carbs: round(carbsGrams),
+  };
+}
+
+function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
+  const bmr = calculateBmr({ sex, age, heightCm, weightKg });
+  const maintain = bmr * activity;
+
+  const cutMin = maintain * 0.80;
+  const cutMax = maintain * 0.90;
+
+  const bulkMin = maintain * 1.05;
+  const bulkMax = maintain * 1.15;
+
+  // БЖУ: разные сценарии
+  const cutTargetForMacros = maintain * 0.85;
+  const maintainTargetForMacros = maintain;
+  const bulkTargetForMacros = maintain * 1.10;
+
+  const cutMacros = calculateMacros(cutTargetForMacros, weightKg, 2.2, 0.8);
+  const maintainMacros = calculateMacros(maintainTargetForMacros, weightKg, 2.0, 0.9);
+  const bulkMacros = calculateMacros(bulkTargetForMacros, weightKg, 1.8, 0.9);
+
+  return {
+    bmr: round(bmr),
+    cutRange: formatRange(cutMin, cutMax),
+    maintain: round(maintain),
+    bulkRange: formatRange(bulkMin, bulkMax),
+    macros: {
+      cut: cutMacros,
+      maintain: maintainMacros,
+      bulk: bulkMacros,
+    },
   };
 }
 
@@ -71,13 +128,30 @@ function validate(data) {
   return null;
 }
 
+function renderMacros(macros) {
+  cutProteinValue.textContent = macros.cut.protein;
+  cutFatValue.textContent = macros.cut.fat;
+  cutCarbsValue.textContent = macros.cut.carbs;
+
+  maintainProteinValue.textContent = macros.maintain.protein;
+  maintainFatValue.textContent = macros.maintain.fat;
+  maintainCarbsValue.textContent = macros.maintain.carbs;
+
+  bulkProteinValue.textContent = macros.bulk.protein;
+  bulkFatValue.textContent = macros.bulk.fat;
+  bulkCarbsValue.textContent = macros.bulk.carbs;
+
+  macrosSection.classList.remove('hidden');
+}
+
 function renderResult(result) {
   bmrValue.textContent = result.bmr;
-  cutValue.textContent = result.cut;
+  cutValue.textContent = result.cutRange;
   maintainValue.textContent = result.maintain;
-  bulkValue.textContent = result.bulk;
+  bulkValue.textContent = result.bulkRange;
 
   resultBlock.classList.remove('hidden');
+  renderMacros(result.macros);
 }
 
 function processCalculation() {
@@ -88,12 +162,23 @@ function processCalculation() {
 
   if (validationError) {
     resultBlock.classList.add('hidden');
+    macrosSection.classList.add('hidden');
     showError(validationError);
     return;
   }
 
   const result = calculateCalories(data);
   renderResult(result);
+
+  if (tg?.MainButton) {
+    tg.MainButton.setText('Пересчитать');
+    tg.MainButton.show();
+    tg.MainButton.enable();
+  }
+
+  setTimeout(() => {
+    resultBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
 }
 
 if (tg) {
