@@ -4,7 +4,6 @@ const form = document.getElementById('calorie-form');
 const resultBlock = document.getElementById('result');
 const errorBox = document.getElementById('error-box');
 const errorText = document.getElementById('error-text');
-const bannerCalcBtn = document.getElementById('banner-calc-btn');
 
 const bmrValue = document.getElementById('bmr-value');
 const cutValue = document.getElementById('cut-value');
@@ -14,7 +13,6 @@ const bulkValue = document.getElementById('bulk-value');
 function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
   let bmr;
 
-  // Revised Harris-Benedict
   if (sex === 'male') {
     bmr = 88.362 + 13.397 * weightKg + 4.799 * heightCm - 5.677 * age;
   } else {
@@ -103,10 +101,11 @@ if (tg) {
   tg.expand();
 
   if (tg.MainButton) {
-    tg.MainButton.hide();
-    tg.MainButton.setText('');
+    tg.MainButton.setText('Рассчитать');
+    tg.MainButton.show();
+    tg.MainButton.enable();
     tg.MainButton.offClick(processCalculation);
-    tg.MainButton.disable();
+    tg.MainButton.onClick(processCalculation);
   }
 }
 
@@ -114,7 +113,3 @@ form.addEventListener('submit', (event) => {
   event.preventDefault();
   processCalculation();
 });
-
-if (bannerCalcBtn) {
-  bannerCalcBtn.addEventListener('click', processCalculation);
-}

@@ -11,12 +11,10 @@
   --text: #2d2d2d;
   --muted: #51616b;
   --blue: #1087c9;
-  --blue-hover: #0e78b2;
-  --white: #ffffff;
-  --danger: #b42318;
-  --danger-bg: #fdecec;
   --field-bg: #ffffff;
   --field-border: #c8d7df;
+  --danger: #b42318;
+  --danger-bg: #fdecec;
 }
 
 body {
@@ -28,7 +26,7 @@ body {
 .app-shell {
   max-width: 1420px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 24px 16px 120px;
 }
 
 .calc-card {
@@ -38,7 +36,7 @@ body {
 }
 
 .form-side {
-  background: var(--white);
+  background: #ffffff;
   border: 1px solid var(--panel-border);
   border-radius: 14px;
   padding: 20px;
@@ -92,21 +90,6 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(16, 135, 201, 0.14);
 }
 
-.calc-btn {
-  max-width: 260px;
-  padding: 14px 18px;
-  border: none;
-  background: var(--blue);
-  color: var(--white);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.calc-btn:hover,
-.banner-btn:hover {
-  background: var(--blue-hover);
-}
-
 .error-box {
   margin-top: 4px;
   background: var(--danger-bg);
@@ -123,30 +106,12 @@ select:focus {
 .result-banner {
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 0;
-  min-height: 150px;
+  border-radius: 14px;
   padding: 26px 28px;
   display: grid;
-  grid-template-columns: 240px 1.2fr 2.4fr;
-  align-items: center;
+  grid-template-columns: 1.2fr 2.4fr;
+  align-items: start;
   gap: 28px;
-}
-
-.banner-button-wrap {
-  display: flex;
-  align-items: center;
-}
-
-.banner-btn {
-  border: none;
-  background: var(--blue);
-  color: var(--white);
-  font-size: 18px;
-  font-weight: 700;
-  padding: 22px 28px;
-  border-radius: 36px;
-  cursor: pointer;
-  min-height: 74px;
 }
 
 .banner-title-wrap {
@@ -209,7 +174,7 @@ select:focus {
   min-width: 22px;
   border-radius: 50%;
   border: 1px solid #8aa1ad;
-  background: var(--white);
+  background: #ffffff;
   color: #50616c;
   font-size: 13px;
   font-weight: 700;
@@ -254,11 +219,10 @@ select:focus {
 
 @media (max-width: 1280px) {
   .result-banner {
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: 1fr;
   }
 
   .metrics-wrap {
-    grid-column: 1 / -1;
     grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
 }
@@ -268,19 +232,10 @@ select:focus {
     grid-template-columns: 1fr;
   }
 
-  .calc-btn {
-    max-width: none;
-  }
-
   .result-banner {
     grid-template-columns: 1fr;
     gap: 20px;
     padding: 20px;
-    border-radius: 14px;
-  }
-
-  .banner-btn {
-    width: 100%;
   }
 
   .banner-title {
