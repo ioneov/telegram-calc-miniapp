@@ -122,6 +122,11 @@ function calculateMacros(targetCalories, weightKg, proteinPerKg, fatPerKg) {
 
 function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
   const bmr = calculateBmr({ sex, age, heightCm, weightKg });
+
+  if (bmr <= 0) {
+    return { error: 'Расчёт BMR дал некорректный результат. Проверьте данные.' };
+  }
+
   const maintain = bmr * activity;
 
   const cutMin = maintain * 0.80;
@@ -138,6 +143,9 @@ function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
   const maintainMacros = calculateMacros(maintainTargetForMacros, weightKg, 2.0, 0.9);
   const bulkMacros = calculateMacros(bulkTargetForMacros, weightKg, 1.8, 0.9);
 
+  const macrosWarning =
+    cutMacros.carbs === 0 || maintainMacros.carbs === 0 || bulkMacros.carbs === 0;
+
   return {
     bmr: round(bmr),
     cutRange: formatRange(cutMin, cutMax),
@@ -148,6 +156,7 @@ function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
       maintain: maintainMacros,
       bulk: bulkMacros,
     },
+    macrosWarning,
   };
 }
 
@@ -176,22 +185,32 @@ function validate(data) {
     return 'Все поля обязательны.';
   }
 
-  if (data.age < 1 || data.age > 120) {
-    return 'Возраст должен быть в диапазоне 1–120.';
+  if (!Number.isInteger(data.age)) {
+    return 'Возраст должен быть целым числом.';
   }
 
-  if (data.heightCm < 50 || data.heightCm > 250) {
-    return 'Рост должен быть в диапазоне 50–250 см.';
+  if (data.age < 18 || data.age > 100) {
+    return 'Возраст должен быть в диапазоне 18–100. Формула не предназначена для детей.';
   }
 
-  if (data.weightKg < 20 || data.weightKg > 400) {
-    return 'Вес должен быть в диапазоне 20–400 кг.';
+  if (data.heightCm < 100 || data.heightCm > 250) {
+    return 'Рост должен быть в диапазоне 100–250 см.';
+  }
+
+  if (data.weightKg < 30 || data.weightKg > 300) {
+    return 'Вес должен быть в диапазоне 30–300 кг.';
+  }
+
+  const heightM = data.heightCm / 100;
+  const bmi = data.weightKg / (heightM * heightM);
+  if (bmi < 10 || bmi > 80) {
+    return `Соотношение роста и веса нереалистично (ИМТ = ${bmi.toFixed(1)}). Проверьте данные.`;
   }
 
   return null;
 }
 
-function renderMacros(macros) {
+function renderMacros(macros, macrosWarning) {
   cutProteinValue.textContent = macros.cut.protein;
   cutFatValue.textContent = macros.cut.fat;
   cutCarbsValue.textContent = macros.cut.carbs;
@@ -203,6 +222,13 @@ function renderMacros(macros) {
   bulkProteinValue.textContent = macros.bulk.protein;
   bulkFatValue.textContent = macros.bulk.fat;
   bulkCarbsValue.textContent = macros.bulk.carbs;
+
+  const warningEl = document.getElementById('macros-warning');
+  if (macrosWarning) {
+    warningEl.classList.remove('hidden');
+  } else {
+    warningEl.classList.add('hidden');
+  }
 }
 
 function renderCaloriesPlaceholders() {
@@ -229,7 +255,7 @@ function renderResult(result) {
   cutValue.textContent = result.cutRange;
   maintainValue.textContent = result.maintain;
   bulkValue.textContent = result.bulkRange;
-  renderMacros(result.macros);
+  renderMacros(result.macros, result.macrosWarning);
 }
 
 function processCaloriesCalculation() {
@@ -245,6 +271,13 @@ function processCaloriesCalculation() {
   }
 
   const result = calculateCalories(data);
+
+  if (result.error) {
+    renderCaloriesPlaceholders();
+    showError(result.error);
+    return;
+  }
+
   renderResult(result);
 
   if (tg?.MainButton) {
@@ -296,6 +329,44 @@ function readRunningData() {
 }
 
 function validateRunningData(data) {
+  if (
+    !Number.isInteger(data.hours) ||
+    !Number.isInteger(data.minutes) ||
+    !Number.isInteger(data.seconds) ||
+    !Number.isInteger(data.km) ||
+    !Number.isInteger(data.meters)
+  ) {
+    return 'Все поля времени и дистанции должны быть целыми числами.';
+  }
+
+  if (data.hours < 0 || data.minutes < 0 || data.seconds < 0) {
+    return 'Время не может быть отрицательным.';
+  }
+
+  if (data.minutes > 59) {
+    return 'Минуты должны быть в диапазоне 0–59.';
+  }
+
+  if (data.seconds > 59) {
+    return 'Секунды должны быть в диапазоне 0–59.';
+  }
+
+  if (data.hours > 99) {
+    return 'Часы должны быть в диапазоне 0–99.';
+  }
+
+  if (data.km < 0 || data.meters < 0) {
+    return 'Дистанция не может быть отрицательной.';
+  }
+
+  if (data.meters > 999) {
+    return 'Метров должно быть в диапазоне 0–999.';
+  }
+
+  if (data.km > 1000) {
+    return 'Дистанция не может превышать 1000 км.';
+  }
+
   const totalSeconds = data.hours * 3600 + data.minutes * 60 + data.seconds;
   const totalMeters = data.km * 1000 + data.meters;
 
@@ -307,8 +378,15 @@ function validateRunningData(data) {
     return 'Дистанция должна быть больше нуля.';
   }
 
-  if (data.meters < 0 || data.meters > 999) {
-    return 'Метров должно быть в диапазоне 0–999.';
+  const totalKm = totalMeters / 1000;
+  const paceMinPerKm = (totalSeconds / 60) / totalKm;
+
+  if (paceMinPerKm > 60) {
+    return 'Слишком медленный темп (>60 мин/км). Проверьте введённые данные.';
+  }
+
+  if (paceMinPerKm < 0.5) {
+    return 'Слишком быстрый темп (<30 сек/км). Проверьте введённые данные.';
   }
 
   return null;
@@ -381,6 +459,11 @@ if (tg) {
     tg.MainButton.onClick(handleMainButtonClick);
   }
 }
+
+runningForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  processRunningCalculation();
+});
 
 renderCaloriesPlaceholders();
 switchMacroTab('maintain');
