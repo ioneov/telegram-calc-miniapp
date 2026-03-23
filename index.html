@@ -29,17 +29,17 @@
 
             <label>
               <span class="field-label">Возраст</span>
-              <input id="age" type="number" min="1" max="120" required />
+              <input id="age" type="number" min="18" max="100" step="1" required />
             </label>
 
             <label>
               <span class="field-label">Рост, см</span>
-              <input id="height" type="number" min="50" max="250" required />
+              <input id="height" type="number" min="100" max="250" required />
             </label>
 
             <label>
               <span class="field-label">Вес, кг</span>
-              <input id="weight" type="number" min="20" max="400" step="0.1" required />
+              <input id="weight" type="number" min="30" max="300" step="0.1" required />
             </label>
 
             <label class="full-width">
@@ -102,6 +102,10 @@
       <section id="macros-section" class="macros-section hidden">
         <div class="macros-card">
           <div class="macros-head">БЖУ по целям</div>
+
+          <div id="macros-warning" class="macros-warning hidden">
+            <p>⚠ При текущем весе белки и жиры покрывают весь калораж — углеводы = 0. Рекомендации по БЖУ могут быть неточными. Обратитесь к диетологу.</p>
+          </div>
 
           <div class="macros-grid">
             <div class="macro-goal-card">

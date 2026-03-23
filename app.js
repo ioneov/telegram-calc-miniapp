@@ -58,6 +58,11 @@ function calculateMacros(targetCalories, weightKg, proteinPerKg, fatPerKg) {
 
 function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
   const bmr = calculateBmr({ sex, age, heightCm, weightKg });
+
+  if (bmr <= 0) {
+    return { error: 'Расчёт BMR дал некорректный результат. Проверьте данные.' };
+  }
+
   const maintain = bmr * activity;
 
   const cutMin = maintain * 0.80;
@@ -75,6 +80,10 @@ function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
   const maintainMacros = calculateMacros(maintainTargetForMacros, weightKg, 2.0, 0.9);
   const bulkMacros = calculateMacros(bulkTargetForMacros, weightKg, 1.8, 0.9);
 
+  // Проверка: если углеводы = 0, белки+жиры превышают калораж
+  const macrosWarning =
+    cutMacros.carbs === 0 || maintainMacros.carbs === 0 || bulkMacros.carbs === 0;
+
   return {
     bmr: round(bmr),
     cutRange: formatRange(cutMin, cutMax),
@@ -85,6 +94,7 @@ function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
       maintain: maintainMacros,
       bulk: bulkMacros,
     },
+    macrosWarning,
   };
 }
 
@@ -113,22 +123,33 @@ function validate(data) {
     return 'Все поля обязательны.';
   }
 
-  if (data.age < 1 || data.age > 120) {
-    return 'Возраст должен быть в диапазоне 1–120.';
+  if (!Number.isInteger(data.age)) {
+    return 'Возраст должен быть целым числом.';
   }
 
-  if (data.heightCm < 50 || data.heightCm > 250) {
-    return 'Рост должен быть в диапазоне 50–250 см.';
+  if (data.age < 18 || data.age > 100) {
+    return 'Возраст должен быть в диапазоне 18–100. Формула не предназначена для детей.';
   }
 
-  if (data.weightKg < 20 || data.weightKg > 400) {
-    return 'Вес должен быть в диапазоне 20–400 кг.';
+  if (data.heightCm < 100 || data.heightCm > 250) {
+    return 'Рост должен быть в диапазоне 100–250 см.';
+  }
+
+  if (data.weightKg < 30 || data.weightKg > 300) {
+    return 'Вес должен быть в диапазоне 30–300 кг.';
+  }
+
+  // Кросс-валидация: BMI в пределах 10–80
+  const heightM = data.heightCm / 100;
+  const bmi = data.weightKg / (heightM * heightM);
+  if (bmi < 10 || bmi > 80) {
+    return `Соотношение роста и веса нереалистично (ИМТ = ${bmi.toFixed(1)}). Проверьте введённые данные.`;
   }
 
   return null;
 }
 
-function renderMacros(macros) {
+function renderMacros(macros, macrosWarning) {
   cutProteinValue.textContent = macros.cut.protein;
   cutFatValue.textContent = macros.cut.fat;
   cutCarbsValue.textContent = macros.cut.carbs;
@@ -141,6 +162,13 @@ function renderMacros(macros) {
   bulkFatValue.textContent = macros.bulk.fat;
   bulkCarbsValue.textContent = macros.bulk.carbs;
 
+  const warningEl = document.getElementById('macros-warning');
+  if (macrosWarning) {
+    warningEl.classList.remove('hidden');
+  } else {
+    warningEl.classList.add('hidden');
+  }
+
   macrosSection.classList.remove('hidden');
 }
 
@@ -151,7 +179,7 @@ function renderResult(result) {
   bulkValue.textContent = result.bulkRange;
 
   resultBlock.classList.remove('hidden');
-  renderMacros(result.macros);
+  renderMacros(result.macros, result.macrosWarning);
 }
 
 function processCalculation() {
@@ -168,6 +196,14 @@ function processCalculation() {
   }
 
   const result = calculateCalories(data);
+
+  if (result.error) {
+    resultBlock.classList.add('hidden');
+    macrosSection.classList.add('hidden');
+    showError(result.error);
+    return;
+  }
+
   renderResult(result);
 
   if (tg?.MainButton) {

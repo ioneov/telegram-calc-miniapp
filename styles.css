@@ -292,6 +292,21 @@ select:focus {
   color: var(--muted);
 }
 
+.macros-warning {
+  background: #fef3cd;
+  border: 1px solid #e6c547;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.macros-warning p {
+  color: #664d03;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
 .hidden {
   display: none;
 }
