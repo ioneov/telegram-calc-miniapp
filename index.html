@@ -17,27 +17,30 @@
 </head>
 <body>
   <main class="app-shell">
-    <section class="tabs-card">
-      <div class="tabs" role="tablist" aria-label="Разделы калькуляторов">
+    <section class="top-tabs-card">
+      <div class="top-tabs" role="tablist" aria-label="Разделы калькуляторов">
         <button
           type="button"
-          class="tab-button active"
+          class="top-tab-button active"
           id="tab-calories-btn"
           data-tab="calories"
           role="tab"
           aria-selected="true"
         >
-          Расчет калорий
+          <span class="top-tab-icon">◌</span>
+          <span class="top-tab-label">Калории</span>
         </button>
+
         <button
           type="button"
-          class="tab-button"
+          class="top-tab-button"
           id="tab-running-btn"
           data-tab="running"
           role="tab"
           aria-selected="false"
         >
-          Калькулятор темпа и скорости бега
+          <span class="top-tab-icon">◌</span>
+          <span class="top-tab-label">Бег</span>
         </button>
       </div>
     </section>
@@ -88,7 +91,7 @@
           </section>
         </div>
 
-        <section id="result" class="result-banner hidden">
+        <section id="result" class="result-banner" role="status" aria-live="polite">
           <div class="banner-title-wrap">
             <h1 class="banner-title">Ваша суточная норма калорий</h1>
           </div>
@@ -104,81 +107,93 @@
                   </span>
                 </span>
               </div>
-              <div class="metric-value"><span id="bmr-value">—</span> ккал</div>
+              <div class="metric-value"><span id="bmr-value">-</span> ккал</div>
             </div>
 
             <div class="metric-block">
               <div class="metric-label">Сброс веса</div>
-              <div class="metric-value"><span id="cut-value">—</span> ккал</div>
+              <div class="metric-value"><span id="cut-value">-</span> ккал</div>
               <div class="metric-subtext">Диапазон: -10% … -20%</div>
             </div>
 
             <div class="metric-block">
               <div class="metric-label">Поддержание</div>
-              <div class="metric-value"><span id="maintain-value">—</span> ккал</div>
+              <div class="metric-value"><span id="maintain-value">-</span> ккал</div>
               <div class="metric-subtext">Базовая поддерживающая норма</div>
             </div>
 
             <div class="metric-block">
               <div class="metric-label">Набор массы</div>
-              <div class="metric-value"><span id="bulk-value">—</span> ккал</div>
+              <div class="metric-value"><span id="bulk-value">-</span> ккал</div>
               <div class="metric-subtext">Диапазон: +5% … +15%</div>
             </div>
           </div>
         </section>
 
-        <section id="macros-section" class="macros-section hidden">
+        <section id="macros-section" class="macros-section">
           <div class="macros-card">
             <div class="macros-head">БЖУ по целям</div>
 
-            <div class="macros-grid">
-              <div class="macro-goal-card">
+            <div class="macro-slicers" role="tablist" aria-label="Цели БЖУ">
+              <button type="button" class="macro-slicer" data-macro-tab="cut" aria-selected="false">
+                Сброс веса
+              </button>
+              <button type="button" class="macro-slicer active" data-macro-tab="maintain" aria-selected="true">
+                Поддержание
+              </button>
+              <button type="button" class="macro-slicer" data-macro-tab="bulk" aria-selected="false">
+                Набор массы
+              </button>
+            </div>
+
+            <div class="macros-panels">
+              <div class="macro-goal-card macro-panel" id="macro-panel-cut">
                 <div class="macro-goal-title">Сброс веса</div>
                 <div class="macro-row">
                   <span class="macro-name">Белки</span>
-                  <span class="macro-value"><span id="cut-protein">—</span> г</span>
+                  <span class="macro-value"><span id="cut-protein">-</span> г</span>
                 </div>
                 <div class="macro-row">
                   <span class="macro-name">Жиры</span>
-                  <span class="macro-value"><span id="cut-fat">—</span> г</span>
+                  <span class="macro-value"><span id="cut-fat">-</span> г</span>
                 </div>
                 <div class="macro-row">
                   <span class="macro-name">Углеводы</span>
-                  <span class="macro-value"><span id="cut-carbs">—</span> г</span>
+                  <span class="macro-value"><span id="cut-carbs">-</span> г</span>
                 </div>
                 <div class="macro-note">Белки: 2.2 г/кг · Жиры: 0.8 г/кг</div>
               </div>
 
-              <div class="macro-goal-card">
+              <div class="macro-goal-card macro-panel active" id="macro-panel-maintain">
                 <div class="macro-goal-title">Поддержание</div>
                 <div class="macro-row">
                   <span class="macro-name">Белки</span>
-                  <span class="macro-value"><span id="maintain-protein">—</span> г</span>
+                  <span class="macro-value"><span id="maintain-protein">-</span> г</span>
                 </div>
                 <div class="macro-row">
                   <span class="macro-name">Жиры</span>
-                  <span class="macro-value"><span id="maintain-fat">—</span> г</span>
+                  <span class="macro-value"><span id="maintain-fat">-</span> г</span>
                 </div>
                 <div class="macro-row">
                   <span class="macro-name">Углеводы</span>
-                  <span class="macro-value"><span id="maintain-carbs">—</span> г</span>
+                  <span class="macro-value"><span id="maintain-carbs">-</span> г</span>
                 </div>
                 <div class="macro-note">Белки: 2.0 г/кг · Жиры: 0.9 г/кг</div>
               </div>
 
-              <div class="macro-goal-card">
+              <div class="macro-goal-card macro-panel" id="macro-panel-bulk">
                 <div class="macro-goal-title">Набор массы</div>
                 <div class="macro-row">
                   <span class="macro-name">Белки</span>
-                  <span class="macro-value"><span id="bulk-protein">—</span> г</span>
+                  <span class="macro-value"><span id="bulk-protein">-</span> г</span>
                 </div>
                 <div class="macro-row">
                   <span class="macro-name">Жиры</span>
-                  <span class="macro-value"><span id="bulk-fat">—</span> г</span>
+                  <span class="macro-value"><span id="bulk-fat">-</span> г</span>
                 </div>
                 <div class="macro-row">
                   <span class="macro-name">Углеводы</span>
-                  <span class="macro-value"><span id="bulk-carbs">—</span> г</span>
+                  <span class="macro-value"><span id="bulk-carbs">-</span> г</span>
                 </div>
                 <div class="macro-note">Белки: 1.8 г/кг · Жиры: 0.9 г/кг</div>
               </div>
@@ -189,190 +204,200 @@
     </section>
 
     <section id="tab-running" class="tab-panel" role="tabpanel">
-      <section class="running-card">
-        <div class="running-inner">
-          <form id="running-form" class="running-form">
-            <div class="running-row">
-              <label class="running-inline">
-                <span class="running-label">Время бега:</span>
-                <select id="run-hours">
-                  <option value="0" selected>0</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                </select>
-                <span class="running-unit">час</span>
-              </label>
+      <section class="calc-card">
+        <div class="form-side running-panel">
+          <form id="running-form" class="running-form-modern">
+            <div class="running-fields-grid">
+              <div class="running-field full-width">
+                <span class="field-label">Время бега</span>
+                <div class="running-inline-group">
+                  <label class="running-inline-modern">
+                    <select id="run-hours">
+                      <option value="0" selected>0</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5">5</option>
+                    </select>
+                    <span class="running-unit-modern">час</span>
+                  </label>
 
-              <label class="running-inline">
-                <select id="run-minutes">
-                  <option value="0">00</option>
-                  <option value="1">01</option>
-                  <option value="2">02</option>
-                  <option value="3">03</option>
-                  <option value="4">04</option>
-                  <option value="5">05</option>
-                  <option value="6">06</option>
-                  <option value="7">07</option>
-                  <option value="8">08</option>
-                  <option value="9">09</option>
-                  <option value="10">10</option>
-                  <option value="11">11</option>
-                  <option value="12">12</option>
-                  <option value="13">13</option>
-                  <option value="14">14</option>
-                  <option value="15">15</option>
-                  <option value="16">16</option>
-                  <option value="17">17</option>
-                  <option value="18">18</option>
-                  <option value="19">19</option>
-                  <option value="20">20</option>
-                  <option value="21">21</option>
-                  <option value="22">22</option>
-                  <option value="23">23</option>
-                  <option value="24">24</option>
-                  <option value="25">25</option>
-                  <option value="26">26</option>
-                  <option value="27">27</option>
-                  <option value="28">28</option>
-                  <option value="29">29</option>
-                  <option value="30">30</option>
-                  <option value="31">31</option>
-                  <option value="32">32</option>
-                  <option value="33">33</option>
-                  <option value="34">34</option>
-                  <option value="35">35</option>
-                  <option value="36">36</option>
-                  <option value="37">37</option>
-                  <option value="38">38</option>
-                  <option value="39">39</option>
-                  <option value="40">40</option>
-                  <option value="41">41</option>
-                  <option value="42">42</option>
-                  <option value="43">43</option>
-                  <option value="44">44</option>
-                  <option value="45">45</option>
-                  <option value="46">46</option>
-                  <option value="47">47</option>
-                  <option value="48">48</option>
-                  <option value="49">49</option>
-                  <option value="50">50</option>
-                  <option value="51">51</option>
-                  <option value="52">52</option>
-                  <option value="53">53</option>
-                  <option value="54">54</option>
-                  <option value="55">55</option>
-                  <option value="56">56</option>
-                  <option value="57">57</option>
-                  <option value="58">58</option>
-                  <option value="59">59</option>
-                </select>
-                <span class="running-unit">мин</span>
-              </label>
+                  <label class="running-inline-modern">
+                    <select id="run-minutes">
+                      <option value="0">00</option>
+                      <option value="1">01</option>
+                      <option value="2">02</option>
+                      <option value="3">03</option>
+                      <option value="4">04</option>
+                      <option value="5">05</option>
+                      <option value="6">06</option>
+                      <option value="7">07</option>
+                      <option value="8">08</option>
+                      <option value="9">09</option>
+                      <option value="10">10</option>
+                      <option value="11">11</option>
+                      <option value="12">12</option>
+                      <option value="13">13</option>
+                      <option value="14">14</option>
+                      <option value="15">15</option>
+                      <option value="16">16</option>
+                      <option value="17">17</option>
+                      <option value="18">18</option>
+                      <option value="19">19</option>
+                      <option value="20">20</option>
+                      <option value="21">21</option>
+                      <option value="22">22</option>
+                      <option value="23">23</option>
+                      <option value="24">24</option>
+                      <option value="25">25</option>
+                      <option value="26">26</option>
+                      <option value="27">27</option>
+                      <option value="28">28</option>
+                      <option value="29">29</option>
+                      <option value="30">30</option>
+                      <option value="31">31</option>
+                      <option value="32">32</option>
+                      <option value="33">33</option>
+                      <option value="34">34</option>
+                      <option value="35">35</option>
+                      <option value="36">36</option>
+                      <option value="37">37</option>
+                      <option value="38">38</option>
+                      <option value="39">39</option>
+                      <option value="40">40</option>
+                      <option value="41">41</option>
+                      <option value="42">42</option>
+                      <option value="43">43</option>
+                      <option value="44">44</option>
+                      <option value="45">45</option>
+                      <option value="46">46</option>
+                      <option value="47">47</option>
+                      <option value="48">48</option>
+                      <option value="49">49</option>
+                      <option value="50">50</option>
+                      <option value="51">51</option>
+                      <option value="52">52</option>
+                      <option value="53">53</option>
+                      <option value="54">54</option>
+                      <option value="55">55</option>
+                      <option value="56">56</option>
+                      <option value="57">57</option>
+                      <option value="58">58</option>
+                      <option value="59">59</option>
+                    </select>
+                    <span class="running-unit-modern">мин</span>
+                  </label>
 
-              <label class="running-inline">
-                <select id="run-seconds">
-                  <option value="0">00</option>
-                  <option value="1">01</option>
-                  <option value="2">02</option>
-                  <option value="3">03</option>
-                  <option value="4">04</option>
-                  <option value="5">05</option>
-                  <option value="6">06</option>
-                  <option value="7">07</option>
-                  <option value="8">08</option>
-                  <option value="9">09</option>
-                  <option value="10">10</option>
-                  <option value="11">11</option>
-                  <option value="12">12</option>
-                  <option value="13">13</option>
-                  <option value="14">14</option>
-                  <option value="15">15</option>
-                  <option value="16">16</option>
-                  <option value="17">17</option>
-                  <option value="18">18</option>
-                  <option value="19">19</option>
-                  <option value="20">20</option>
-                  <option value="21">21</option>
-                  <option value="22">22</option>
-                  <option value="23">23</option>
-                  <option value="24">24</option>
-                  <option value="25">25</option>
-                  <option value="26">26</option>
-                  <option value="27">27</option>
-                  <option value="28">28</option>
-                  <option value="29">29</option>
-                  <option value="30">30</option>
-                  <option value="31">31</option>
-                  <option value="32">32</option>
-                  <option value="33">33</option>
-                  <option value="34">34</option>
-                  <option value="35">35</option>
-                  <option value="36">36</option>
-                  <option value="37">37</option>
-                  <option value="38">38</option>
-                  <option value="39">39</option>
-                  <option value="40">40</option>
-                  <option value="41">41</option>
-                  <option value="42">42</option>
-                  <option value="43">43</option>
-                  <option value="44">44</option>
-                  <option value="45">45</option>
-                  <option value="46">46</option>
-                  <option value="47">47</option>
-                  <option value="48">48</option>
-                  <option value="49">49</option>
-                  <option value="50">50</option>
-                  <option value="51">51</option>
-                  <option value="52">52</option>
-                  <option value="53">53</option>
-                  <option value="54">54</option>
-                  <option value="55">55</option>
-                  <option value="56">56</option>
-                  <option value="57">57</option>
-                  <option value="58">58</option>
-                  <option value="59">59</option>
-                </select>
-                <span class="running-unit">сек</span>
-              </label>
-            </div>
+                  <label class="running-inline-modern">
+                    <select id="run-seconds">
+                      <option value="0">00</option>
+                      <option value="1">01</option>
+                      <option value="2">02</option>
+                      <option value="3">03</option>
+                      <option value="4">04</option>
+                      <option value="5">05</option>
+                      <option value="6">06</option>
+                      <option value="7">07</option>
+                      <option value="8">08</option>
+                      <option value="9">09</option>
+                      <option value="10">10</option>
+                      <option value="11">11</option>
+                      <option value="12">12</option>
+                      <option value="13">13</option>
+                      <option value="14">14</option>
+                      <option value="15">15</option>
+                      <option value="16">16</option>
+                      <option value="17">17</option>
+                      <option value="18">18</option>
+                      <option value="19">19</option>
+                      <option value="20">20</option>
+                      <option value="21">21</option>
+                      <option value="22">22</option>
+                      <option value="23">23</option>
+                      <option value="24">24</option>
+                      <option value="25">25</option>
+                      <option value="26">26</option>
+                      <option value="27">27</option>
+                      <option value="28">28</option>
+                      <option value="29">29</option>
+                      <option value="30">30</option>
+                      <option value="31">31</option>
+                      <option value="32">32</option>
+                      <option value="33">33</option>
+                      <option value="34">34</option>
+                      <option value="35">35</option>
+                      <option value="36">36</option>
+                      <option value="37">37</option>
+                      <option value="38">38</option>
+                      <option value="39">39</option>
+                      <option value="40">40</option>
+                      <option value="41">41</option>
+                      <option value="42">42</option>
+                      <option value="43">43</option>
+                      <option value="44">44</option>
+                      <option value="45">45</option>
+                      <option value="46">46</option>
+                      <option value="47">47</option>
+                      <option value="48">48</option>
+                      <option value="49">49</option>
+                      <option value="50">50</option>
+                      <option value="51">51</option>
+                      <option value="52">52</option>
+                      <option value="53">53</option>
+                      <option value="54">54</option>
+                      <option value="55">55</option>
+                      <option value="56">56</option>
+                      <option value="57">57</option>
+                      <option value="58">58</option>
+                      <option value="59">59</option>
+                    </select>
+                    <span class="running-unit-modern">сек</span>
+                  </label>
+                </div>
+              </div>
 
-            <div class="running-row">
-              <label class="running-inline">
-                <span class="running-label">Дистанция:</span>
-                <input id="run-km" type="number" min="0" step="1" value="0" />
-                <span class="running-unit">км</span>
-              </label>
+              <div class="running-field full-width">
+                <span class="field-label">Дистанция</span>
+                <div class="running-inline-group">
+                  <label class="running-inline-modern">
+                    <input id="run-km" type="number" min="0" step="1" value="0" />
+                    <span class="running-unit-modern">км</span>
+                  </label>
 
-              <label class="running-inline">
-                <input id="run-meters" type="number" min="0" max="999" step="1" value="0" />
-                <span class="running-unit">метров</span>
-              </label>
+                  <label class="running-inline-modern">
+                    <input id="run-meters" type="number" min="0" max="999" step="1" value="0" />
+                    <span class="running-unit-modern">метров</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </form>
-
-          <div class="running-separator"></div>
-
-          <div class="running-results">
-            <div class="running-result-row">
-              <span class="running-result-label">Темп бега (на 1 км):</span>
-              <span class="running-result-value" id="pace-value">-</span>
-              <span class="running-result-unit">мин:сек</span>
-            </div>
-
-            <div class="running-result-row">
-              <span class="running-result-label">Скорость бега:</span>
-              <span class="running-result-value" id="speed-value">-</span>
-              <span class="running-result-unit">км/ч</span>
-            </div>
-          </div>
 
           <section id="running-error-box" class="error-box hidden running-error">
             <p id="running-error-text">—</p>
           </section>
         </div>
+
+        <section class="result-banner running-result-banner">
+          <div class="banner-title-wrap">
+            <h1 class="banner-title">Темп и скорость бега</h1>
+          </div>
+
+          <div class="metrics-wrap metrics-wrap-running">
+            <div class="metric-block">
+              <div class="metric-label">Темп бега (на 1 км)</div>
+              <div class="metric-value"><span id="pace-value">-</span></div>
+              <div class="metric-subtext">мин:сек</div>
+            </div>
+
+            <div class="metric-block">
+              <div class="metric-label">Скорость бега</div>
+              <div class="metric-value"><span id="speed-value">-</span></div>
+              <div class="metric-subtext">км/ч</div>
+            </div>
+          </div>
+        </section>
       </section>
     </section>
   </main>

@@ -10,13 +10,7 @@ let activeTab = 'calories';
 
 function updateMainButton() {
   if (!tg?.MainButton) return;
-
-  if (activeTab === 'calories') {
-    tg.MainButton.setText('Рассчитать калории');
-  } else {
-    tg.MainButton.setText('Рассчитать темп и скорость');
-  }
-
+  tg.MainButton.setText('Рассчитать');
   tg.MainButton.show();
   tg.MainButton.enable();
 }
@@ -41,6 +35,36 @@ function switchTab(tabName) {
 tabCaloriesBtn.addEventListener('click', () => switchTab('calories'));
 tabRunningBtn.addEventListener('click', () => switchTab('running'));
 
+/* -------------------- macro slicers -------------------- */
+const macroSlicerButtons = document.querySelectorAll('.macro-slicer');
+const macroPanels = {
+  cut: document.getElementById('macro-panel-cut'),
+  maintain: document.getElementById('macro-panel-maintain'),
+  bulk: document.getElementById('macro-panel-bulk'),
+};
+
+let activeMacroTab = 'maintain';
+
+function switchMacroTab(tabName) {
+  activeMacroTab = tabName;
+
+  macroSlicerButtons.forEach((button) => {
+    const isActive = button.dataset.macroTab === tabName;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-selected', String(isActive));
+  });
+
+  Object.entries(macroPanels).forEach(([key, panel]) => {
+    panel.classList.toggle('active', key === tabName);
+  });
+}
+
+macroSlicerButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    switchMacroTab(button.dataset.macroTab);
+  });
+});
+
 /* -------------------- calories -------------------- */
 const form = document.getElementById('calorie-form');
 const resultBlock = document.getElementById('result');
@@ -51,8 +75,6 @@ const bmrValue = document.getElementById('bmr-value');
 const cutValue = document.getElementById('cut-value');
 const maintainValue = document.getElementById('maintain-value');
 const bulkValue = document.getElementById('bulk-value');
-
-const macrosSection = document.getElementById('macros-section');
 
 const cutProteinValue = document.getElementById('cut-protein');
 const cutFatValue = document.getElementById('cut-fat');
@@ -181,8 +203,25 @@ function renderMacros(macros) {
   bulkProteinValue.textContent = macros.bulk.protein;
   bulkFatValue.textContent = macros.bulk.fat;
   bulkCarbsValue.textContent = macros.bulk.carbs;
+}
 
-  macrosSection.classList.remove('hidden');
+function renderCaloriesPlaceholders() {
+  bmrValue.textContent = '-';
+  cutValue.textContent = '-';
+  maintainValue.textContent = '-';
+  bulkValue.textContent = '-';
+
+  cutProteinValue.textContent = '-';
+  cutFatValue.textContent = '-';
+  cutCarbsValue.textContent = '-';
+
+  maintainProteinValue.textContent = '-';
+  maintainFatValue.textContent = '-';
+  maintainCarbsValue.textContent = '-';
+
+  bulkProteinValue.textContent = '-';
+  bulkFatValue.textContent = '-';
+  bulkCarbsValue.textContent = '-';
 }
 
 function renderResult(result) {
@@ -190,8 +229,6 @@ function renderResult(result) {
   cutValue.textContent = result.cutRange;
   maintainValue.textContent = result.maintain;
   bulkValue.textContent = result.bulkRange;
-
-  resultBlock.classList.remove('hidden');
   renderMacros(result.macros);
 }
 
@@ -202,8 +239,7 @@ function processCaloriesCalculation() {
   const validationError = validate(data);
 
   if (validationError) {
-    resultBlock.classList.add('hidden');
-    macrosSection.classList.add('hidden');
+    renderCaloriesPlaceholders();
     showError(validationError);
     return;
   }
@@ -212,7 +248,7 @@ function processCaloriesCalculation() {
   renderResult(result);
 
   if (tg?.MainButton) {
-    tg.MainButton.setText('Пересчитать калории');
+    tg.MainButton.setText('Пересчитать');
     tg.MainButton.show();
     tg.MainButton.enable();
   }
@@ -310,12 +346,13 @@ function processRunningCalculation() {
 
   paceValue.textContent = `${normalizedPaceMinutes}:${pad2(normalizedPaceSeconds)}`;
   speedValue.textContent = speed.toFixed(2);
-}
 
-runningForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  processRunningCalculation();
-});
+  if (tg?.MainButton) {
+    tg.MainButton.setText('Пересчитать');
+    tg.MainButton.show();
+    tg.MainButton.enable();
+  }
+}
 
 /* -------------------- telegram -------------------- */
 function handleMainButtonClick() {
@@ -345,4 +382,6 @@ if (tg) {
   }
 }
 
+renderCaloriesPlaceholders();
+switchMacroTab('maintain');
 switchTab('calories');

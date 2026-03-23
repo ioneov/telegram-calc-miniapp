@@ -11,14 +11,18 @@
   --text: #2d2d2d;
   --muted: #51616b;
   --blue: #1087c9;
+  --blue-soft: #e8f3fb;
   --field-bg: #ffffff;
   --field-border: #c8d7df;
   --danger: #b42318;
   --danger-bg: #fdecec;
   --white: #ffffff;
-  --tab-bg: #e9eff3;
-  --running-bg: #cfe8b7;
-  --running-border: #304d1f;
+  --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --slicer-bg: #eef3f7;
+  --slicer-border: #d6e0e7;
+  --slicer-active-bg: #dceaf7;
+  --slicer-active-border: #9dc3e6;
+  --slicer-active-text: #1f5f9b;
 }
 
 html,
@@ -49,36 +53,65 @@ main,
   padding: 16px 16px 120px;
 }
 
-.tabs-card {
+.top-tabs-card {
   margin-bottom: 18px;
 }
 
-.tabs {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  background: var(--white);
-  border: 1px solid var(--panel-border);
-  border-radius: 14px;
-  padding: 8px;
+.top-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 12px;
 }
 
-.tab-button {
-  border: 1px solid var(--panel-border);
-  background: var(--tab-bg);
-  color: var(--text);
-  border-radius: 10px;
-  padding: 12px 16px;
-  font-size: 14px;
-  font-weight: 700;
+.top-tab-button {
+  border: 1px solid #ececec;
+  background: var(--white);
+  border-radius: 18px;
+  padding: 16px 18px;
+  min-height: 86px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  box-shadow: var(--shadow-soft);
   cursor: pointer;
   transition: 0.15s ease;
 }
 
-.tab-button.active {
-  background: var(--blue);
-  color: var(--white);
-  border-color: var(--blue);
+.top-tab-button.active {
+  border-color: #f1d7df;
+  background: #fff8fa;
+}
+
+.top-tab-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  color: #8a8f98;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.top-tab-button.active .top-tab-icon {
+  background: #ffe7ee;
+  color: #f06292;
+}
+
+.top-tab-label {
+  font-family: 'Geologica', sans-serif;
+  font-size: 20px;
+  line-height: 1.1;
+  font-weight: 700;
+  color: #6b6f76;
+}
+
+.top-tab-button.active .top-tab-label {
+  color: #f06292;
 }
 
 .tab-panel {
@@ -98,8 +131,9 @@ main,
 .form-side {
   background: var(--white);
   border: 1px solid var(--panel-border);
-  border-radius: 14px;
+  border-radius: 18px;
   padding: 20px;
+  box-shadow: var(--shadow-soft);
 }
 
 .form-stack {
@@ -132,7 +166,7 @@ button {
   width: 100%;
   font-family: 'Inter', sans-serif;
   font-size: 15px;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 input,
@@ -154,7 +188,7 @@ select:focus {
   margin-top: 4px;
   background: var(--danger-bg);
   border: 1px solid rgba(180, 35, 24, 0.18);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px 14px;
 }
 
@@ -166,12 +200,13 @@ select:focus {
 .result-banner {
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 14px;
+  border-radius: 18px;
   padding: 26px 28px;
   display: grid;
   grid-template-columns: 1.2fr 2.4fr;
   align-items: start;
   gap: 28px;
+  box-shadow: var(--shadow-soft);
 }
 
 .banner-title-wrap {
@@ -259,7 +294,7 @@ select:focus {
   top: calc(100% + 10px);
   width: 340px;
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #27343b;
   color: #ffffff;
   font-size: 13px;
@@ -287,28 +322,63 @@ select:focus {
 .macros-card {
   background: var(--white);
   border: 1px solid var(--panel-border);
-  border-radius: 14px;
+  border-radius: 18px;
   padding: 20px;
+  box-shadow: var(--shadow-soft);
 }
 
 .macros-head {
   font-family: 'Geologica', sans-serif;
   font-size: 22px;
   font-weight: 700;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   color: var(--text);
 }
 
-.macros-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(220px, 1fr));
-  gap: 16px;
+.macro-slicers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.macro-slicer {
+  width: auto;
+  border: 1px solid var(--slicer-border);
+  background: var(--slicer-bg);
+  color: #52606d;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: 0.15s ease;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.macro-slicer.active {
+  background: var(--slicer-active-bg);
+  border-color: var(--slicer-active-border);
+  color: var(--slicer-active-text);
+}
+
+.macros-panels {
+  display: block;
+}
+
+.macro-panel {
+  display: none;
+}
+
+.macro-panel.active {
+  display: block;
 }
 
 .macro-goal-card {
   background: #f8fbfd;
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 16px;
 }
 
@@ -351,107 +421,65 @@ select:focus {
   color: var(--muted);
 }
 
-.running-card {
-  background: transparent;
+.running-panel {
+  background: var(--white);
 }
 
-.running-inner {
-  background: var(--running-bg);
-  border: 3px solid var(--running-border);
-  border-radius: 14px;
-  padding: 18px 16px;
-  max-width: 760px;
-}
-
-.running-form {
+.running-form-modern {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
 
-.running-row {
+.running-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.running-field {
+  display: block;
+}
+
+.running-inline-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 10px;
+  gap: 12px;
   align-items: center;
 }
 
-.running-inline {
+.running-inline-modern {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-}
-
-.running-label {
-  min-width: 110px;
-  font-family: 'Geologica', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: #000000;
-}
-
-.running-unit {
-  font-size: 14px;
-  color: #000000;
-}
-
-.running-form select,
-.running-form input {
-  width: auto;
-  min-width: 54px;
-  padding: 6px 8px;
-  border-radius: 0;
-  border: 1px solid #7f8f72;
-  background: #ffffff;
-  box-shadow: none;
-}
-
-.running-form input {
-  min-width: 62px;
-}
-
-.running-separator {
-  height: 1px;
-  background: rgba(48, 77, 31, 0.25);
-  margin: 14px 0;
-}
-
-.running-results {
-  display: flex;
-  flex-direction: column;
   gap: 8px;
 }
 
-.running-result-row {
-  display: grid;
-  grid-template-columns: 240px 1fr 90px;
-  align-items: center;
-  gap: 10px;
+.running-inline-modern select,
+.running-inline-modern input {
+  width: auto;
+  min-width: 88px;
 }
 
-.running-result-label {
-  font-family: 'Geologica', sans-serif;
-  font-size: 16px;
-  font-weight: 700;
-  color: #000000;
+.running-inline-modern input[type="number"] {
+  min-width: 120px;
 }
 
-.running-result-value {
-  font-size: 18px;
-  font-weight: 700;
-  color: #000000;
-  text-align: center;
+.running-unit-modern {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
 }
 
-.running-result-unit {
-  font-family: 'Geologica', sans-serif;
-  font-size: 16px;
-  font-weight: 700;
-  color: #000000;
+.running-result-banner {
+  grid-template-columns: 1.1fr 1.5fr;
+}
+
+.metrics-wrap-running {
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
 }
 
 .running-error {
-  margin-top: 16px;
+  margin-top: 0;
 }
 
 .hidden {
@@ -466,10 +494,6 @@ select:focus {
   .metrics-wrap {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
-
-  .macros-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 820px) {
@@ -477,8 +501,17 @@ select:focus {
     padding: 12px 12px 120px;
   }
 
-  .tabs {
-    flex-direction: column;
+  .top-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .top-tab-button {
+    min-height: 74px;
+    border-radius: 16px;
+  }
+
+  .top-tab-label {
+    font-size: 18px;
   }
 
   .fields-grid {
@@ -512,30 +545,25 @@ select:focus {
     font-size: 20px;
   }
 
-  .running-inner {
-    padding: 14px 12px;
+  .macro-slicers {
+    flex-direction: column;
   }
 
-  .running-row {
+  .macro-slicer {
+    width: 100%;
+  }
+
+  .running-inline-group {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .running-inline {
+  .running-inline-modern {
     flex-wrap: wrap;
   }
 
-  .running-label {
-    min-width: auto;
+  .running-inline-modern select,
+  .running-inline-modern input {
     width: 100%;
-  }
-
-  .running-result-row {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
-
-  .running-result-value {
-    text-align: left;
   }
 }
