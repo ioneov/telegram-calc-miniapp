@@ -8,20 +8,6 @@ const errorBox = document.getElementById('error-box');
 const errorText = document.getElementById('error-text');
 const webButton = document.getElementById('web-button');
 
-function applyTelegramTheme() {
-  if (!tg) return;
-
-  const theme = tg.themeParams || {};
-  const root = document.documentElement;
-
-  if (theme.bg_color) root.style.setProperty('--tg-bg', theme.bg_color);
-  if (theme.text_color) root.style.setProperty('--tg-text', theme.text_color);
-  if (theme.hint_color) root.style.setProperty('--tg-hint', theme.hint_color);
-  if (theme.button_color) root.style.setProperty('--tg-button', theme.button_color);
-  if (theme.button_text_color) root.style.setProperty('--tg-button-text', theme.button_text_color);
-  if (theme.secondary_bg_color) root.style.setProperty('--tg-card', theme.secondary_bg_color);
-}
-
 function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
   let bmr;
 
@@ -110,7 +96,6 @@ function processCalculation() {
 if (tg) {
   tg.ready();
   tg.expand();
-  applyTelegramTheme();
 
   if (tg.MainButton) {
     tg.MainButton.setText('Рассчитать');
@@ -118,11 +103,6 @@ if (tg) {
     tg.MainButton.show();
   }
 
-  if (tg.onEvent) {
-    tg.onEvent('themeChanged', applyTelegramTheme);
-  }
-
-  // Обычную кнопку оставляем как fallback
   webButton.style.display = 'none';
 }
 
