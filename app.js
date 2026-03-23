@@ -1,470 +1,119 @@
 const tg = window.Telegram?.WebApp;
 
-/* -------------------- tabs -------------------- */
-const tabCaloriesBtn = document.getElementById('tab-calories-btn');
-const tabRunningBtn = document.getElementById('tab-running-btn');
-const tabCalories = document.getElementById('tab-calories');
-const tabRunning = document.getElementById('tab-running');
-
-let activeTab = 'calories';
-
-function updateMainButton() {
-  if (!tg?.MainButton) return;
-  tg.MainButton.setText('Рассчитать');
-  tg.MainButton.show();
-  tg.MainButton.enable();
-}
+/* Логика переключения разделов (Калории / Бег) */
+const tabButtons = document.querySelectorAll('.tab-item');
+const tabPanels = document.querySelectorAll('.tab-panel');
 
 function switchTab(tabName) {
-  activeTab = tabName;
-
-  const isCalories = tabName === 'calories';
-
-  tabCaloriesBtn.classList.toggle('active', isCalories);
-  tabCaloriesBtn.setAttribute('aria-selected', String(isCalories));
-
-  tabRunningBtn.classList.toggle('active', !isCalories);
-  tabRunningBtn.setAttribute('aria-selected', String(!isCalories));
-
-  tabCalories.classList.toggle('active', isCalories);
-  tabRunning.classList.toggle('active', !isCalories);
-
-  updateMainButton();
-}
-
-tabCaloriesBtn.addEventListener('click', () => switchTab('calories'));
-tabRunningBtn.addEventListener('click', () => switchTab('running'));
-
-/* -------------------- macro slicers -------------------- */
-const macroSlicerButtons = document.querySelectorAll('.macro-slicer');
-const macroPanels = {
-  cut: document.getElementById('macro-panel-cut'),
-  maintain: document.getElementById('macro-panel-maintain'),
-  bulk: document.getElementById('macro-panel-bulk'),
-};
-
-let activeMacroTab = 'maintain';
-
-function switchMacroTab(tabName) {
-  activeMacroTab = tabName;
-
-  macroSlicerButtons.forEach((button) => {
-    const isActive = button.dataset.macroTab === tabName;
-    button.classList.toggle('active', isActive);
-    button.setAttribute('aria-selected', String(isActive));
-  });
-
-  Object.entries(macroPanels).forEach(([key, panel]) => {
-    panel.classList.toggle('active', key === tabName);
-  });
-}
-
-macroSlicerButtons.forEach((button) => {
-  button.addEventListener('click', () => {
-    switchMacroTab(button.dataset.macroTab);
-  });
-});
-
-/* -------------------- calories -------------------- */
-const form = document.getElementById('calorie-form');
-const resultBlock = document.getElementById('result');
-const errorBox = document.getElementById('error-box');
-const errorText = document.getElementById('error-text');
-
-const bmrValue = document.getElementById('bmr-value');
-const cutValue = document.getElementById('cut-value');
-const maintainValue = document.getElementById('maintain-value');
-const bulkValue = document.getElementById('bulk-value');
-
-const cutProteinValue = document.getElementById('cut-protein');
-const cutFatValue = document.getElementById('cut-fat');
-const cutCarbsValue = document.getElementById('cut-carbs');
-
-const maintainProteinValue = document.getElementById('maintain-protein');
-const maintainFatValue = document.getElementById('maintain-fat');
-const maintainCarbsValue = document.getElementById('maintain-carbs');
-
-const bulkProteinValue = document.getElementById('bulk-protein');
-const bulkFatValue = document.getElementById('bulk-fat');
-const bulkCarbsValue = document.getElementById('bulk-carbs');
-
-function round(value) {
-  return Math.round(value);
-}
-
-function formatRange(min, max) {
-  return `${round(min)}–${round(max)}`;
-}
-
-function calculateBmr({ sex, age, heightCm, weightKg }) {
-  if (sex === 'male') {
-    return 88.362 + 13.397 * weightKg + 4.799 * heightCm - 5.677 * age;
-  }
-
-  return 447.593 + 9.247 * weightKg + 3.098 * heightCm - 4.330 * age;
-}
-
-function calculateMacros(targetCalories, weightKg, proteinPerKg, fatPerKg) {
-  const proteinGrams = weightKg * proteinPerKg;
-  const fatGrams = weightKg * fatPerKg;
-
-  const caloriesFromProtein = proteinGrams * 4;
-  const caloriesFromFat = fatGrams * 9;
-  const remainingCalories = targetCalories - caloriesFromProtein - caloriesFromFat;
-  const carbsGrams = Math.max(0, remainingCalories / 4);
-
-  return {
-    protein: round(proteinGrams),
-    fat: round(fatGrams),
-    carbs: round(carbsGrams),
-  };
-}
-
-function calculateCalories({ sex, age, heightCm, weightKg, activity }) {
-  const bmr = calculateBmr({ sex, age, heightCm, weightKg });
-
-  if (bmr <= 0) {
-    return { error: 'Расчёт BMR дал некорректный результат. Проверьте данные.' };
-  }
-
-  const maintain = bmr * activity;
-
-  const cutMin = maintain * 0.80;
-  const cutMax = maintain * 0.90;
-
-  const bulkMin = maintain * 1.05;
-  const bulkMax = maintain * 1.15;
-
-  const cutTargetForMacros = maintain * 0.85;
-  const maintainTargetForMacros = maintain;
-  const bulkTargetForMacros = maintain * 1.10;
-
-  const cutMacros = calculateMacros(cutTargetForMacros, weightKg, 2.2, 0.8);
-  const maintainMacros = calculateMacros(maintainTargetForMacros, weightKg, 2.0, 0.9);
-  const bulkMacros = calculateMacros(bulkTargetForMacros, weightKg, 1.8, 0.9);
-
-  const macrosWarning =
-    cutMacros.carbs === 0 || maintainMacros.carbs === 0 || bulkMacros.carbs === 0;
-
-  return {
-    bmr: round(bmr),
-    cutRange: formatRange(cutMin, cutMax),
-    maintain: round(maintain),
-    bulkRange: formatRange(bulkMin, bulkMax),
-    macros: {
-      cut: cutMacros,
-      maintain: maintainMacros,
-      bulk: bulkMacros,
-    },
-    macrosWarning,
-  };
-}
-
-function showError(message) {
-  errorText.textContent = message;
-  errorBox.classList.remove('hidden');
-}
-
-function hideError() {
-  errorText.textContent = '';
-  errorBox.classList.add('hidden');
-}
-
-function readFormData() {
-  return {
-    sex: document.getElementById('sex').value,
-    age: Number(document.getElementById('age').value),
-    heightCm: Number(document.getElementById('height').value),
-    weightKg: Number(document.getElementById('weight').value),
-    activity: Number(document.getElementById('activity').value),
-  };
-}
-
-function validate(data) {
-  if (!data.age || !data.heightCm || !data.weightKg || !data.activity) {
-    return 'Все поля обязательны.';
-  }
-
-  if (!Number.isInteger(data.age)) {
-    return 'Возраст должен быть целым числом.';
-  }
-
-  if (data.age < 18 || data.age > 100) {
-    return 'Возраст должен быть в диапазоне 18–100. Формула не предназначена для детей.';
-  }
-
-  if (data.heightCm < 100 || data.heightCm > 250) {
-    return 'Рост должен быть в диапазоне 100–250 см.';
-  }
-
-  if (data.weightKg < 30 || data.weightKg > 300) {
-    return 'Вес должен быть в диапазоне 30–300 кг.';
-  }
-
-  const heightM = data.heightCm / 100;
-  const bmi = data.weightKg / (heightM * heightM);
-  if (bmi < 10 || bmi > 80) {
-    return `Соотношение роста и веса нереалистично (ИМТ = ${bmi.toFixed(1)}). Проверьте данные.`;
-  }
-
-  return null;
-}
-
-function renderMacros(macros, macrosWarning) {
-  cutProteinValue.textContent = macros.cut.protein;
-  cutFatValue.textContent = macros.cut.fat;
-  cutCarbsValue.textContent = macros.cut.carbs;
-
-  maintainProteinValue.textContent = macros.maintain.protein;
-  maintainFatValue.textContent = macros.maintain.fat;
-  maintainCarbsValue.textContent = macros.maintain.carbs;
-
-  bulkProteinValue.textContent = macros.bulk.protein;
-  bulkFatValue.textContent = macros.bulk.fat;
-  bulkCarbsValue.textContent = macros.bulk.carbs;
-
-  const warningEl = document.getElementById('macros-warning');
-  if (macrosWarning) {
-    warningEl.classList.remove('hidden');
-  } else {
-    warningEl.classList.add('hidden');
-  }
-}
-
-function renderCaloriesPlaceholders() {
-  bmrValue.textContent = '-';
-  cutValue.textContent = '-';
-  maintainValue.textContent = '-';
-  bulkValue.textContent = '-';
-
-  cutProteinValue.textContent = '-';
-  cutFatValue.textContent = '-';
-  cutCarbsValue.textContent = '-';
-
-  maintainProteinValue.textContent = '-';
-  maintainFatValue.textContent = '-';
-  maintainCarbsValue.textContent = '-';
-
-  bulkProteinValue.textContent = '-';
-  bulkFatValue.textContent = '-';
-  bulkCarbsValue.textContent = '-';
-}
-
-function renderResult(result) {
-  bmrValue.textContent = result.bmr;
-  cutValue.textContent = result.cutRange;
-  maintainValue.textContent = result.maintain;
-  bulkValue.textContent = result.bulkRange;
-  renderMacros(result.macros, result.macrosWarning);
-}
-
-function processCaloriesCalculation() {
-  hideError();
-
-  const data = readFormData();
-  const validationError = validate(data);
-
-  if (validationError) {
-    renderCaloriesPlaceholders();
-    showError(validationError);
-    return;
-  }
-
-  const result = calculateCalories(data);
-
-  if (result.error) {
-    renderCaloriesPlaceholders();
-    showError(result.error);
-    return;
-  }
-
-  renderResult(result);
-
+  tabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabName));
+  tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === `tab-${tabName}`));
+  
   if (tg?.MainButton) {
-    tg.MainButton.setText('Пересчитать');
+    tg.MainButton.setText('РАССЧИТАТЬ');
     tg.MainButton.show();
-    tg.MainButton.enable();
   }
-
-  setTimeout(() => {
-    resultBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 100);
 }
 
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
-  processCaloriesCalculation();
+tabButtons.forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
-/* -------------------- running -------------------- */
-const runningForm = document.getElementById('running-form');
-const runningErrorBox = document.getElementById('running-error-box');
-const runningErrorText = document.getElementById('running-error-text');
+/* Логика переключения БЖУ (Сброс / Норма / Набор) */
+const macroButtons = document.querySelectorAll('.macro-slicer');
+const macroPanels = document.querySelectorAll('.macro-panel');
 
-const paceValue = document.getElementById('pace-value');
-const speedValue = document.getElementById('speed-value');
+macroButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    macroButtons.forEach(b => b.classList.remove('active'));
+    macroPanels.forEach(p => p.classList.remove('active'));
+    
+    btn.classList.add('active');
+    document.getElementById(`macro-panel-${btn.dataset.macroTab}`).classList.add('active');
+  });
+});
 
-function showRunningError(message) {
-  runningErrorText.textContent = message;
-  runningErrorBox.classList.remove('hidden');
+/* Расчет калорий */
+function calculateCalories() {
+  const sex = document.getElementById('sex').value;
+  const age = Number(document.getElementById('age').value);
+  const height = Number(document.getElementById('height').value);
+  const weight = Number(document.getElementById('weight').value);
+  const activity = Number(document.getElementById('activity').value);
+
+  const errBox = document.getElementById('error-box');
+  if (!age || !height || !weight) {
+    errBox.classList.remove('hidden');
+    document.getElementById('error-text').textContent = "Заполните все поля";
+    return;
+  }
+  errBox.classList.add('hidden');
+
+  // Формула Миффлина-Сан Жеора
+  let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+  bmr = sex === 'male' ? bmr + 5 : bmr - 161;
+
+  const maintain = Math.round(bmr * activity);
+  
+  document.getElementById('bmr-value').textContent = Math.round(bmr);
+  document.getElementById('maintain-value').textContent = maintain;
+  document.getElementById('cut-value').textContent = Math.round(maintain * 0.85);
+  document.getElementById('bulk-value').textContent = Math.round(maintain * 1.15);
+
+  updateMacros(maintain, weight);
 }
 
-function hideRunningError() {
-  runningErrorText.textContent = '';
-  runningErrorBox.classList.add('hidden');
+/* Расчет БЖУ для всех трех вкладок */
+function updateMacros(maintainKcal, weight) {
+  const goals = {
+    cut: { kcal: Math.round(maintainKcal * 0.85), p: 2.2, f: 0.8 },
+    maintain: { kcal: maintainKcal, p: 2.0, f: 0.9 },
+    bulk: { kcal: Math.round(maintainKcal * 1.15), p: 1.8, f: 1.0 }
+  };
+
+  Object.keys(goals).forEach(key => {
+    const config = goals[key];
+    const protein = Math.round(weight * config.p);
+    const fat = Math.round(weight * config.f);
+    const carbs = Math.max(0, Math.round((config.kcal - (protein * 4 + fat * 9)) / 4));
+
+    document.getElementById(`${key}-protein`).textContent = protein + 'г';
+    document.getElementById(`${key}-fat`).textContent = fat + 'г';
+    document.getElementById(`${key}-carbs`).textContent = carbs + 'г';
+  });
 }
 
-function pad2(num) {
-  return String(num).padStart(2, '0');
-}
-
-function readRunningData() {
-  const hours = Number(document.getElementById('run-hours').value);
-  const minutes = Number(document.getElementById('run-minutes').value);
-  const seconds = Number(document.getElementById('run-seconds').value);
+/* Расчет бега */
+function calculateRunning() {
+  const h = Number(document.getElementById('run-hours').value);
+  const m = Number(document.getElementById('run-minutes').value);
+  const s = Number(document.getElementById('run-seconds').value);
   const km = Number(document.getElementById('run-km').value);
-  const meters = Number(document.getElementById('run-meters').value);
+  const mt = Number(document.getElementById('run-meters').value);
 
-  return { hours, minutes, seconds, km, meters };
-}
+  const totalSeconds = (h * 3600) + (m * 60) + s;
+  const totalKm = km + (mt / 1000);
 
-function validateRunningData(data) {
-  if (
-    !Number.isInteger(data.hours) ||
-    !Number.isInteger(data.minutes) ||
-    !Number.isInteger(data.seconds) ||
-    !Number.isInteger(data.km) ||
-    !Number.isInteger(data.meters)
-  ) {
-    return 'Все поля времени и дистанции должны быть целыми числами.';
-  }
+  if (totalSeconds > 0 && totalKm > 0) {
+    const paceTotalSeconds = totalSeconds / totalKm;
+    const paceMinutes = Math.floor(paceTotalSeconds / 60);
+    const paceSeconds = Math.round(paceTotalSeconds % 60);
+    const speed = totalKm / (totalSeconds / 3600);
 
-  if (data.hours < 0 || data.minutes < 0 || data.seconds < 0) {
-    return 'Время не может быть отрицательным.';
-  }
-
-  if (data.minutes > 59) {
-    return 'Минуты должны быть в диапазоне 0–59.';
-  }
-
-  if (data.seconds > 59) {
-    return 'Секунды должны быть в диапазоне 0–59.';
-  }
-
-  if (data.hours > 99) {
-    return 'Часы должны быть в диапазоне 0–99.';
-  }
-
-  if (data.km < 0 || data.meters < 0) {
-    return 'Дистанция не может быть отрицательной.';
-  }
-
-  if (data.meters > 999) {
-    return 'Метров должно быть в диапазоне 0–999.';
-  }
-
-  if (data.km > 1000) {
-    return 'Дистанция не может превышать 1000 км.';
-  }
-
-  const totalSeconds = data.hours * 3600 + data.minutes * 60 + data.seconds;
-  const totalMeters = data.km * 1000 + data.meters;
-
-  if (totalSeconds <= 0) {
-    return 'Время бега должно быть больше нуля.';
-  }
-
-  if (totalMeters <= 0) {
-    return 'Дистанция должна быть больше нуля.';
-  }
-
-  const totalKm = totalMeters / 1000;
-  const paceMinPerKm = (totalSeconds / 60) / totalKm;
-
-  if (paceMinPerKm > 60) {
-    return 'Слишком медленный темп (>60 мин/км). Проверьте введённые данные.';
-  }
-
-  if (paceMinPerKm < 0.5) {
-    return 'Слишком быстрый темп (<30 сек/км). Проверьте введённые данные.';
-  }
-
-  return null;
-}
-
-function processRunningCalculation() {
-  hideRunningError();
-
-  const data = readRunningData();
-  const validationError = validateRunningData(data);
-
-  if (validationError) {
-    paceValue.textContent = '-';
-    speedValue.textContent = '-';
-    showRunningError(validationError);
-    return;
-  }
-
-  const totalSeconds = data.hours * 3600 + data.minutes * 60 + data.seconds;
-  const totalKm = data.km + data.meters / 1000;
-
-  const secondsPerKm = totalSeconds / totalKm;
-  const paceMinutes = Math.floor(secondsPerKm / 60);
-  const paceSeconds = Math.round(secondsPerKm % 60);
-
-  let normalizedPaceMinutes = paceMinutes;
-  let normalizedPaceSeconds = paceSeconds;
-
-  if (normalizedPaceSeconds === 60) {
-    normalizedPaceMinutes += 1;
-    normalizedPaceSeconds = 0;
-  }
-
-  const speed = totalKm / (totalSeconds / 3600);
-
-  paceValue.textContent = `${normalizedPaceMinutes}:${pad2(normalizedPaceSeconds)}`;
-  speedValue.textContent = speed.toFixed(2);
-
-  if (tg?.MainButton) {
-    tg.MainButton.setText('Пересчитать');
-    tg.MainButton.show();
-    tg.MainButton.enable();
+    document.getElementById('pace-value').textContent = `${paceMinutes}:${paceSeconds.toString().padStart(2, '0')}`;
+    document.getElementById('speed-value').textContent = speed.toFixed(2);
   }
 }
 
-/* -------------------- telegram -------------------- */
-function handleMainButtonClick() {
-  if (activeTab === 'calories') {
-    processCaloriesCalculation();
-  } else {
-    processRunningCalculation();
-  }
-}
-
+/* Инициализация Telegram Mini App */
 if (tg) {
   tg.ready();
   tg.expand();
-
-  try {
-    tg.setBackgroundColor('#f7f7f7');
-  } catch (e) {}
-
-  try {
-    tg.setHeaderColor('#f7f7f7');
-  } catch (e) {}
-
-  if (tg.MainButton) {
-    updateMainButton();
-    tg.MainButton.offClick(handleMainButtonClick);
-    tg.MainButton.onClick(handleMainButtonClick);
-  }
+  tg.MainButton.setText('РАССЧИТАТЬ');
+  tg.MainButton.show();
+  
+  tg.MainButton.onClick(() => {
+    const activePanel = document.querySelector('.tab-panel.active').id;
+    if (activePanel === 'tab-calories') calculateCalories();
+    else calculateRunning();
+  });
 }
-
-runningForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  processRunningCalculation();
-});
-
-renderCaloriesPlaceholders();
-switchMacroTab('maintain');
-switchTab('calories');

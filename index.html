@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#f7f7f7">
   <title>Калькуляторы</title>
@@ -11,269 +11,164 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <main class="app-shell">
-    <section class="powerbi-top-tabs">
-      <div class="powerbi-top-tabs-inner">
-        <div class="powerbi-top-tab-arrows" aria-hidden="true">
-          <span>◀</span>
-          <span>▶</span>
+    <nav class="modern-tabs">
+      <button type="button" class="tab-item active" id="tab-calories-btn" data-tab="calories">
+        <div class="tab-icon-card">
+          <img src="kkal-svg.svg" alt="Калории" />
         </div>
+      </button>
 
-        <button
-          type="button"
-          class="powerbi-top-tab active"
-          id="tab-calories-btn"
-          data-tab="calories"
-          role="tab"
-          aria-selected="true"
-        >
-          Расчет калорий
-        </button>
+      <button type="button" class="tab-item" id="tab-running-btn" data-tab="running">
+        <div class="tab-icon-card">
+          <img src="run-svg.svg" alt="Бег" />
+        </div>
+      </button>
+    </nav>
 
-        <button
-          type="button"
-          class="powerbi-top-tab"
-          id="tab-running-btn"
-          data-tab="running"
-          role="tab"
-          aria-selected="false"
-        >
-          Темп и скорость бега
-        </button>
-      </div>
-    </section>
-
-    <section id="tab-calories" class="tab-panel active" role="tabpanel">
-      <section class="calc-card">
-        <div class="form-side">
+    <section id="tab-calories" class="tab-panel active">
+      <div class="calc-card">
+        <section class="form-side">
           <form id="calorie-form" class="form-stack">
             <div class="fields-grid">
               <label>
                 <span class="field-label">Пол</span>
-                <select id="sex" required>
+                <select id="sex">
                   <option value="male">Мужчина</option>
                   <option value="female">Женщина</option>
                 </select>
               </label>
-
               <label>
                 <span class="field-label">Возраст</span>
-                <input id="age" type="number" min="18" max="100" step="1" required />
+                <input id="age" type="number" placeholder="25" />
               </label>
-
               <label>
                 <span class="field-label">Рост, см</span>
-                <input id="height" type="number" min="100" max="250" required />
+                <input id="height" type="number" placeholder="175" />
               </label>
-
               <label>
                 <span class="field-label">Вес, кг</span>
-                <input id="weight" type="number" min="30" max="300" step="0.1" required />
+                <input id="weight" type="number" step="0.1" placeholder="70" />
               </label>
-
               <label class="full-width">
                 <span class="field-label">Активность</span>
-                <select id="activity" required>
-                  <option value="1.2">Минимальная – сидячий образ жизни</option>
-                  <option value="1.375">Низкая – 1-3 тренировки в неделю</option>
-                  <option value="1.55" selected>Средняя – 3-5 тренировок в неделю</option>
-                  <option value="1.725">Высокая – 6-7 тренировок в неделю</option>
-                  <option value="1.9">Очень высокая – ежедневный спорт / физический труд</option>
+                <select id="activity">
+                  <option value="1.2">Минимальная</option>
+                  <option value="1.375">Низкая (1-3 трен.)</option>
+                  <option value="1.55" selected>Средняя (3-5 трен.)</option>
+                  <option value="1.725">Высокая (6-7 трен.)</option>
+                  <option value="1.9">Очень высокая</option>
                 </select>
               </label>
             </div>
           </form>
-
-          <section id="error-box" class="error-box hidden">
-            <p id="error-text">–</p>
-          </section>
-        </div>
-
-        <section id="result" class="result-banner" role="status" aria-live="polite">
-          <div class="banner-title-wrap">
-            <h1 class="banner-title">Ваша суточная норма калорий</h1>
+          <div id="error-box" class="error-box hidden">
+            <p id="error-text"></p>
           </div>
+        </section>
 
-          <div class="metrics-wrap">
-            <div class="metric-block">
-              <div class="metric-label metric-label-inline">
-                <span>Базовый обмен (BMR)</span>
-                <span class="tooltip-wrap">
-                  <button type="button" class="tooltip-trigger" aria-label="Что такое BMR?">?</button>
-                  <span class="tooltip-text">
-                    BMR – базовый метаболический обмен (Basal Metabolic Requirement), то есть количество калорий, которые ваш организм сжигает каждый день, чтобы поддерживать вас в живом состоянии
-                  </span>
-                </span>
-              </div>
-              <div class="metric-value"><span id="bmr-value">-</span> ккал</div>
+        <section id="result" class="result-banner">
+          <h2 class="banner-title">Суточная норма</h2>
+          <div class="metrics-grid">
+            <div class="metric-item">
+              <span class="m-label">BMR</span>
+              <span class="m-value" id="bmr-value">-</span>
             </div>
-
-            <div class="metric-block">
-              <div class="metric-label">Сброс веса</div>
-              <div class="metric-value"><span id="cut-value">-</span> ккал</div>
+            <div class="metric-item">
+              <span class="m-label">Поддержание</span>
+              <span class="m-value" id="maintain-value">-</span>
             </div>
-
-            <div class="metric-block">
-              <div class="metric-label">Поддержание</div>
-              <div class="metric-value"><span id="maintain-value">-</span> ккал</div>
+            <div class="metric-item accent-cut">
+              <span class="m-label">Сброс (-15%)</span>
+              <span class="m-value" id="cut-value">-</span>
             </div>
-
-            <div class="metric-block">
-              <div class="metric-label">Набор массы</div>
-              <div class="metric-value"><span id="bulk-value">-</span> ккал</div>
+            <div class="metric-item accent-bulk">
+              <span class="m-label">Набор (+15%)</span>
+              <span class="m-value" id="bulk-value">-</span>
             </div>
           </div>
         </section>
 
-        <section id="macros-section" class="macros-section">
-          <div class="macros-card">
-            <div class="macros-head">БЖУ по целям</div>
+        <section class="macros-card">
+          <div class="macro-slicers">
+            <button type="button" class="macro-slicer" data-macro-tab="cut">Сброс</button>
+            <button type="button" class="macro-slicer active" data-macro-tab="maintain">Норма</button>
+            <button type="button" class="macro-slicer" data-macro-tab="bulk">Набор</button>
+          </div>
 
-            <div id="macros-warning" class="macros-warning hidden">
-              <p>⚠ При текущем весе белки и жиры покрывают весь калораж – углеводы = 0. Рекомендации по БЖУ могут быть неточными.</p>
+          <div class="macros-display">
+            <div id="macros-warning" class="macros-warning hidden">⚠️ Мало углеводов!</div>
+            
+            <div class="macro-panel" id="macro-panel-cut">
+              <div class="macro-grid">
+                <div class="macro-col"><span>Белки</span><strong id="cut-protein">-</strong></div>
+                <div class="macro-col"><span>Жиры</span><strong id="cut-fat">-</strong></div>
+                <div class="macro-col"><span>Угл.</span><strong id="cut-carbs">-</strong></div>
+              </div>
             </div>
 
-            <div class="macro-slicers" role="tablist" aria-label="Цели БЖУ">
-              <button type="button" class="macro-slicer" data-macro-tab="cut" aria-selected="false">
-                Сброс веса
-              </button>
-              <button type="button" class="macro-slicer active" data-macro-tab="maintain" aria-selected="true">
-                Поддержание
-              </button>
-              <button type="button" class="macro-slicer" data-macro-tab="bulk" aria-selected="false">
-                Набор массы
-              </button>
+            <div class="macro-panel active" id="macro-panel-maintain">
+              <div class="macro-grid">
+                <div class="macro-col"><span>Белки</span><strong id="maintain-protein">-</strong></div>
+                <div class="macro-col"><span>Жиры</span><strong id="maintain-fat">-</strong></div>
+                <div class="macro-col"><span>Угл.</span><strong id="maintain-carbs">-</strong></div>
+              </div>
             </div>
 
-            <div class="macros-panels">
-              <div class="macro-goal-card macro-panel" id="macro-panel-cut">
-                <div class="macro-goal-title">Сброс веса</div>
-                <div class="macro-row">
-                  <span class="macro-name">Белки</span>
-                  <span class="macro-value"><span id="cut-protein">-</span> г</span>
-                </div>
-                <div class="macro-row">
-                  <span class="macro-name">Жиры</span>
-                  <span class="macro-value"><span id="cut-fat">-</span> г</span>
-                </div>
-                <div class="macro-row">
-                  <span class="macro-name">Углеводы</span>
-                  <span class="macro-value"><span id="cut-carbs">-</span> г</span>
-                </div>
-              </div>
-
-              <div class="macro-goal-card macro-panel active" id="macro-panel-maintain">
-                <div class="macro-goal-title">Поддержание</div>
-                <div class="macro-row">
-                  <span class="macro-name">Белки</span>
-                  <span class="macro-value"><span id="maintain-protein">-</span> г</span>
-                </div>
-                <div class="macro-row">
-                  <span class="macro-name">Жиры</span>
-                  <span class="macro-value"><span id="maintain-fat">-</span> г</span>
-                </div>
-                <div class="macro-row">
-                  <span class="macro-name">Углеводы</span>
-                  <span class="macro-value"><span id="maintain-carbs">-</span> г</span>
-                </div>
-              </div>
-
-              <div class="macro-goal-card macro-panel" id="macro-panel-bulk">
-                <div class="macro-goal-title">Набор массы</div>
-                <div class="macro-row">
-                  <span class="macro-name">Белки</span>
-                  <span class="macro-value"><span id="bulk-protein">-</span> г</span>
-                </div>
-                <div class="macro-row">
-                  <span class="macro-name">Жиры</span>
-                  <span class="macro-value"><span id="bulk-fat">-</span> г</span>
-                </div>
-                <div class="macro-row">
-                  <span class="macro-name">Углеводы</span>
-                  <span class="macro-value"><span id="bulk-carbs">-</span> г</span>
-                </div>
+            <div class="macro-panel" id="macro-panel-bulk">
+              <div class="macro-grid">
+                <div class="macro-col"><span>Белки</span><strong id="bulk-protein">-</strong></div>
+                <div class="macro-col"><span>Жиры</span><strong id="bulk-fat">-</strong></div>
+                <div class="macro-col"><span>Угл.</span><strong id="bulk-carbs">-</strong></div>
               </div>
             </div>
           </div>
         </section>
-      </section>
+      </div>
     </section>
 
-    <section id="tab-running" class="tab-panel" role="tabpanel">
-      <section class="calc-card">
-        <div class="form-side running-panel">
-          <form id="running-form" class="running-form-modern">
-            <div class="running-fields-grid">
-              <div class="running-field full-width">
-                <span class="field-label">Время бега</span>
-                <div class="running-inline-group">
-                  <label class="running-inline-modern">
-                    <input id="run-hours" type="number" min="0" max="99" step="1" value="0" />
-                    <span class="running-unit-modern">час</span>
-                  </label>
-
-                  <label class="running-inline-modern">
-                    <input id="run-minutes" type="number" min="0" max="59" step="1" value="0" />
-                    <span class="running-unit-modern">мин</span>
-                  </label>
-
-                  <label class="running-inline-modern">
-                    <input id="run-seconds" type="number" min="0" max="59" step="1" value="0" />
-                    <span class="running-unit-modern">сек</span>
-                  </label>
-                </div>
+    <section id="tab-running" class="tab-panel">
+      <div class="calc-card">
+        <section class="form-side">
+          <form id="running-form" class="form-stack">
+            <div class="run-input-group">
+              <span class="field-label">Время бега</span>
+              <div class="hms-grid">
+                <input id="run-hours" type="number" value="0" /><span class="u">ч</span>
+                <input id="run-minutes" type="number" value="0" /><span class="u">м</span>
+                <input id="run-seconds" type="number" value="0" /><span class="u">с</span>
               </div>
-
-              <div class="running-field full-width">
-                <span class="field-label">Дистанция</span>
-                <div class="running-inline-group">
-                  <label class="running-inline-modern">
-                    <input id="run-km" type="number" min="0" max="1000" step="1" value="0" />
-                    <span class="running-unit-modern">км</span>
-                  </label>
-
-                  <label class="running-inline-modern">
-                    <input id="run-meters" type="number" min="0" max="999" step="1" value="0" />
-                    <span class="running-unit-modern">метров</span>
-                  </label>
-                </div>
+            </div>
+            <div class="run-input-group">
+              <span class="field-label">Дистанция</span>
+              <div class="dist-grid">
+                <input id="run-km" type="number" value="0" /><span class="u">км</span>
+                <input id="run-meters" type="number" value="0" /><span class="u">м</span>
               </div>
             </div>
           </form>
+        </section>
 
-          <section id="running-error-box" class="error-box hidden running-error">
-            <p id="running-error-text">–</p>
-          </section>
-        </div>
-
-        <section class="result-banner running-result-banner">
-          <div class="banner-title-wrap">
-            <h1 class="banner-title">Темп и скорость бега</h1>
-          </div>
-
-          <div class="metrics-wrap metrics-wrap-running">
-            <div class="metric-block">
-              <div class="metric-label">Темп бега (на 1 км)</div>
-              <div class="metric-value"><span id="pace-value">-</span></div>
-              <div class="metric-subtext">мин:сек</div>
+        <section class="result-banner running-res">
+          <div class="metrics-grid">
+            <div class="metric-item">
+              <span class="m-label">Темп (мин/км)</span>
+              <span class="m-value" id="pace-value">-</span>
             </div>
-
-            <div class="metric-block">
-              <div class="metric-label">Скорость бега</div>
-              <div class="metric-value"><span id="speed-value">-</span></div>
-              <div class="metric-subtext">км/ч</div>
+            <div class="metric-item">
+              <span class="m-label">Скорость (км/ч)</span>
+              <span class="m-value" id="speed-value">-</span>
             </div>
           </div>
         </section>
-      </section>
+      </div>
     </section>
   </main>
-
   <script src="app.js"></script>
 </body>
 </html>
