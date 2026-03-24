@@ -83,6 +83,12 @@ input:focus, select:focus { border-color: var(--accent); }
 .predict-dist { font-size: 10px; color: rgba(255, 255, 255, 0.5); margin-bottom: 4px; }
 .predict-time { font-size: 12px; font-weight: 700; font-family: "Geologica", sans-serif; }
 
+/* Weight impact predictions */
+.weight-label-loss { color: #9bf6ff !important; }
+.weight-label-gain { color: #ffadad !important; }
+.predict-loss .predict-time { color: #9bf6ff; }
+.predict-gain .predict-time { color: #ffadad; }
+
 /* Utility & Specific blocks */
 .fields-grid.conv-fields {
   grid-template-columns: 1fr auto 1fr;

@@ -264,11 +264,43 @@ function calcFact() {
   const timeMinutes = totalSec / 60;
   const vdot = calcVDOT(distMeters, timeMinutes);
 
-  [ { id: "pred-1k", km: 1 }, { id: "pred-3k", km: 3 }, { id: "pred-5k", km: 5 }, { id: "pred-10k", km: 10 }, { id: "pred-21k", km: 21.0975 } ]
-    .forEach(d => {
-      const predictedMin = predictTime(vdot, d.km * 1000);
-      document.getElementById(d.id).textContent = formatTime(predictedMin * 60);
+  const predDistances = [
+    { id: "pred-1k", lossId: "wloss-1k", gainId: "wgain-1k", km: 1 },
+    { id: "pred-3k", lossId: "wloss-3k", gainId: "wgain-3k", km: 3 },
+    { id: "pred-5k", lossId: "wloss-5k", gainId: "wgain-5k", km: 5 },
+    { id: "pred-10k", lossId: "wloss-10k", gainId: "wgain-10k", km: 10 },
+    { id: "pred-21k", lossId: "wloss-21k", gainId: "wgain-21k", km: 21.0975 }
+  ];
+
+  // Base predictions
+  predDistances.forEach(d => {
+    const predictedMin = predictTime(vdot, d.km * 1000);
+    document.getElementById(d.id).textContent = formatTime(predictedMin * 60);
+  });
+
+  // Weight-adjusted predictions
+  const weight = parsePositiveNumber(document.getElementById("fact-weight").value);
+  const hasWeight = weight >= 30 && weight <= 300;
+
+  if (hasWeight) {
+    const weightLoss = weight - 5;
+    const weightGain = weight + 5;
+    const vdotLoss = vdot * (weight / weightLoss);
+    const vdotGain = vdot * (weight / weightGain);
+
+    predDistances.forEach(d => {
+      const timeLoss = predictTime(vdotLoss, d.km * 1000);
+      const timeGain = predictTime(vdotGain, d.km * 1000);
+      document.getElementById(d.lossId).textContent = formatTime(timeLoss * 60);
+      document.getElementById(d.gainId).textContent = formatTime(timeGain * 60);
     });
+
+    document.getElementById("weight-loss-block").classList.remove("hidden");
+    document.getElementById("weight-gain-block").classList.remove("hidden");
+  } else {
+    document.getElementById("weight-loss-block").classList.add("hidden");
+    document.getElementById("weight-gain-block").classList.add("hidden");
+  }
 
   document.getElementById("run-metrics-standard").classList.remove("hidden");
   document.getElementById("run-metrics-conv").classList.add("hidden");
@@ -318,6 +350,8 @@ function calcTarget() {
   document.getElementById("run-metrics-standard").classList.remove("hidden");
   document.getElementById("run-metrics-conv").classList.add("hidden");
   document.getElementById("predictions-block").classList.add("hidden");
+  document.getElementById("weight-loss-block").classList.add("hidden");
+  document.getElementById("weight-gain-block").classList.add("hidden");
 }
 
 // 3. Converter Mode
@@ -368,6 +402,8 @@ function calcConv() {
 
   document.getElementById("run-metrics-standard").classList.add("hidden");
   document.getElementById("predictions-block").classList.add("hidden");
+  document.getElementById("weight-loss-block").classList.add("hidden");
+  document.getElementById("weight-gain-block").classList.add("hidden");
   document.getElementById("run-metrics-conv").classList.remove("hidden");
 }
 

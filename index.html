@@ -201,6 +201,10 @@
 
           <form id="run-mode-fact" class="form-stack hidden" novalidate>
             <div class="run-input-group">
+              <span class="field-label">Ваш вес, кг</span>
+              <input id="fact-weight" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="70" style="max-width:160px;" />
+            </div>
+            <div class="run-input-group">
               <span class="field-label">Время бега</span>
               <div class="hms-grid">
                 <input id="fact-hours" type="number" inputmode="numeric" min="0" placeholder="0" />
@@ -321,6 +325,30 @@
               <div class="predict-item"><div class="predict-dist">5 км</div><div class="predict-time" id="pred-5k">-</div></div>
               <div class="predict-item"><div class="predict-dist">10 км</div><div class="predict-time" id="pred-10k">-</div></div>
               <div class="predict-item"><div class="predict-dist">21.1 км</div><div class="predict-time" id="pred-21k">-</div></div>
+            </div>
+          </div>
+
+          <div id="weight-loss-block" class="hidden">
+            <hr class="banner-divider" />
+            <span class="m-label weight-label-loss">⬇ Потеря веса −5 кг</span>
+            <div class="predict-grid">
+              <div class="predict-item predict-loss"><div class="predict-dist">1 км</div><div class="predict-time" id="wloss-1k">-</div></div>
+              <div class="predict-item predict-loss"><div class="predict-dist">3 км</div><div class="predict-time" id="wloss-3k">-</div></div>
+              <div class="predict-item predict-loss"><div class="predict-dist">5 км</div><div class="predict-time" id="wloss-5k">-</div></div>
+              <div class="predict-item predict-loss"><div class="predict-dist">10 км</div><div class="predict-time" id="wloss-10k">-</div></div>
+              <div class="predict-item predict-loss"><div class="predict-dist">21.1 км</div><div class="predict-time" id="wloss-21k">-</div></div>
+            </div>
+          </div>
+
+          <div id="weight-gain-block" class="hidden">
+            <hr class="banner-divider" />
+            <span class="m-label weight-label-gain">⬆ Набор веса +5 кг</span>
+            <div class="predict-grid">
+              <div class="predict-item predict-gain"><div class="predict-dist">1 км</div><div class="predict-time" id="wgain-1k">-</div></div>
+              <div class="predict-item predict-gain"><div class="predict-dist">3 км</div><div class="predict-time" id="wgain-3k">-</div></div>
+              <div class="predict-item predict-gain"><div class="predict-dist">5 км</div><div class="predict-time" id="wgain-5k">-</div></div>
+              <div class="predict-item predict-gain"><div class="predict-dist">10 км</div><div class="predict-time" id="wgain-10k">-</div></div>
+              <div class="predict-item predict-gain"><div class="predict-dist">21.1 км</div><div class="predict-time" id="wgain-21k">-</div></div>
             </div>
           </div>
         </section>
