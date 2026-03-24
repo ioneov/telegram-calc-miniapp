@@ -4,8 +4,6 @@ const WORKER_BASE_URL = "https://frosty-hall-66b2.7570745.workers.dev";
 // Global DOM
 const tabButtons = document.querySelectorAll(".tab-item");
 const tabPanels = document.querySelectorAll(".tab-panel");
-const calorieInlineBtn = document.getElementById("calculate-inline-btn");
-const runningInlineBtn = document.getElementById("running-inline-btn");
 
 // Running Tab State
 let activeRunMode = "conv"; // default
@@ -62,7 +60,7 @@ function syncMainButton() {
   tg.MainButton.enable();
 }
 
-// Calories Logic (Unchanged but preserved)
+// Calories Logic
 function validateCaloriesForm() {
   const age = parsePositiveNumber(document.getElementById("age").value);
   const height = parsePositiveNumber(document.getElementById("height").value);
@@ -359,8 +357,6 @@ function initApp() {
   });
 
   bindRunningSlicers();
-  calorieInlineBtn.addEventListener("click", calculateCalories);
-  runningInlineBtn.addEventListener("click", calculateRunning);
 
   initTelegram();
   syncMainButton();
