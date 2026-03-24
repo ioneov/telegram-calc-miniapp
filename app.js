@@ -1,5 +1,4 @@
 const tg = window.Telegram?.WebApp || null;
-const WORKER_BASE_URL = "https://frosty-hall-66b2.7570745.workers.dev";
 
 // Global DOM
 const tabButtons = document.querySelectorAll(".tab-item");
@@ -70,9 +69,14 @@ function validateCaloriesForm() {
   if (!height) fields.push("height");
   if (!weight) fields.push("weight");
   if (fields.length > 0) return { message: "Заполните все поля", fields };
-  if (age < 1 || age > 120) return { message: "Возраст: 1–120 лет", fields: ["age"] };
-  if (height < 50 || height > 300) return { message: "Рост: 50–300 см", fields: ["height"] };
-  if (weight < 20 || weight > 500) return { message: "Вес: 20–500 кг", fields: ["weight"] };
+  if (!Number.isInteger(age)) return { message: "Возраст должен быть целым числом", fields: ["age"] };
+  if (age < 18 || age > 100) return { message: "Возраст: 18–100 лет", fields: ["age"] };
+  if (height < 100 || height > 250) return { message: "Рост: 100–250 см", fields: ["height"] };
+  if (weight < 30 || weight > 300) return { message: "Вес: 30–300 кг", fields: ["weight"] };
+  // Кросс-валидация: BMI 10–80
+  const heightM = height / 100;
+  const bmi = weight / (heightM * heightM);
+  if (bmi < 10 || bmi > 80) return { message: `Нереалистичное соотношение роста и веса (ИМТ ${bmi.toFixed(1)})`, fields: ["height", "weight"] };
   return null;
 }
 
@@ -89,6 +93,9 @@ function calculateCalories() {
 
   let bmr = 10 * weight + 6.25 * height - 5 * age;
   bmr = sex === "male" ? bmr + 5 : bmr - 161;
+
+  if (bmr <= 0) return showError("error-box", "error-text", { message: "BMR отрицательный — проверьте данные", fields: ["age", "height", "weight"] });
+
   const maintain = Math.round(bmr * activity);
 
   document.getElementById("bmr-value").textContent = String(Math.round(bmr));
@@ -182,9 +189,11 @@ function formatPace(totalSecondsPerKm) {
 }
 
 function formatTime(totalSeconds) {
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = Math.round(totalSeconds % 60);
+  let h = Math.floor(totalSeconds / 3600);
+  let m = Math.floor((totalSeconds % 3600) / 60);
+  let s = Math.round(totalSeconds % 60);
+  if (s === 60) { m += 1; s = 0; }
+  if (m === 60) { h += 1; m = 0; }
   return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
 }
 
@@ -212,6 +221,10 @@ function calcFact() {
   if (totalKm <= 0) return showError("running-error-box", "running-error-text", { message: "Укажите дистанцию", fields: ["fact-km"] });
 
   const paceSec = totalSec / totalKm;
+  const paceMinPerKm = paceSec / 60;
+  if (paceMinPerKm > 60) return showError("running-error-box", "running-error-text", { message: "Темп > 60 мин/км — проверьте данные", fields: ["fact-minutes", "fact-km"] });
+  if (paceMinPerKm < 0.5) return showError("running-error-box", "running-error-text", { message: "Темп < 30 сек/км — проверьте данные", fields: ["fact-minutes", "fact-km"] });
+
   const speed = totalKm / (totalSec / 3600);
 
   document.getElementById("res-pace-value").textContent = formatPace(paceSec);
@@ -256,6 +269,10 @@ function calcTarget() {
   if (totalSec <= 0) return showError("running-error-box", "running-error-text", { message: "Укажите желаемое время", fields: ["target-minutes"] });
 
   const paceSec = totalSec / totalKm;
+  const paceMinPerKm = paceSec / 60;
+  if (paceMinPerKm > 60) return showError("running-error-box", "running-error-text", { message: "Темп > 60 мин/км — проверьте данные", fields: ["target-minutes", "target-km"] });
+  if (paceMinPerKm < 0.5) return showError("running-error-box", "running-error-text", { message: "Темп < 30 сек/км — проверьте данные", fields: ["target-minutes", "target-km"] });
+
   const speed = totalKm / (totalSec / 3600);
 
   document.getElementById("res-pace-value").textContent = formatPace(paceSec);
@@ -285,12 +302,13 @@ function calcConv() {
     let s = parsePositiveNumber(document.getElementById("conv-pace-sec").value);
     if (!m && !s) return; // Silent return for empty auto-calc
 
-    const t = normalizeTime(0, m, s);
-    if (t.s || document.getElementById("conv-pace-sec").value) document.getElementById("conv-pace-sec").value = t.s || "";
-    if (t.m || document.getElementById("conv-pace-min").value) document.getElementById("conv-pace-min").value = t.m || "";
+    // Нормализуем только секунды → минуты (часы не нужны для темпа)
+    if (s >= 60) { m += Math.floor(s / 60); s = s % 60; }
+    if (s || document.getElementById("conv-pace-sec").value) document.getElementById("conv-pace-sec").value = s || "";
+    if (m || document.getElementById("conv-pace-min").value) document.getElementById("conv-pace-min").value = m || "";
 
-    const totalSecPerKm = (t.m * 60) + t.s;
-    if (totalSecPerKm <= 0) return;
+    const totalSecPerKm = m * 60 + s;
+    if (totalSecPerKm <= 0 || totalSecPerKm < 30 || totalSecPerKm > 3600) return;
 
     const speed = 3600 / totalSecPerKm;
     const speedRounded = (Math.round(speed * 10) / 10).toFixed(1);
@@ -302,7 +320,7 @@ function calcConv() {
     
   } else {
     let speed = parsePositiveNumber(document.getElementById("conv-speed").value);
-    if (!speed) return;
+    if (!speed || speed > 120 || speed < 1) return;
 
     const totalSecPerKm = 3600 / speed;
     vLabel.textContent = "Темп";
@@ -323,7 +341,8 @@ function calculateRunning() {
   else if (activeRunMode === "target") calcTarget();
   else if (activeRunMode === "conv") calcConv();
 
-  if (document.querySelectorAll(".error-box.hidden").length > 0) {
+  const runningErrorHidden = document.getElementById("running-error-box").classList.contains("hidden");
+  if (runningErrorHidden) {
     triggerUpdateAnimation(".running-res .m-value");
     scrollToElement("running-result");
   }
@@ -341,10 +360,6 @@ function initTelegram() {
   if (tg.MainButton) { tg.MainButton.setText("РАССЧИТАТЬ"); tg.MainButton.show(); tg.MainButton.onClick(handleCalculateAction); }
 }
 
-async function testBackendConnectionSilently() {
-  try { await fetch(`${WORKER_BASE_URL}/api/ping`, { method: "GET", headers: { Accept: "application/json" } }); } catch (e) {}
-}
-
 function initApp() {
   tabButtons.forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
   document.querySelectorAll(".macro-slicer:not([data-run-mode])").forEach(btn => {
@@ -358,9 +373,16 @@ function initApp() {
 
   bindRunningSlicers();
 
+  // Prevent page reload on Enter in any form
+  document.querySelectorAll("form").forEach(f => {
+    f.addEventListener("submit", e => {
+      e.preventDefault();
+      handleCalculateAction();
+    });
+  });
+
   initTelegram();
   syncMainButton();
-  testBackendConnectionSilently();
 }
 
 window.addEventListener("load", initApp);
