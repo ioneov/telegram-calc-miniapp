@@ -197,6 +197,35 @@ function formatTime(totalSeconds) {
   return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
 }
 
+// Daniels-Gilbert VO2max prediction model
+function calcVO2(velocityMPerMin) {
+  return -4.60 + 0.182258 * velocityMPerMin + 0.000104 * velocityMPerMin * velocityMPerMin;
+}
+
+function calcPercentVO2max(timeMinutes) {
+  return 0.8 + 0.1894393 * Math.exp(-0.012778 * timeMinutes) + 0.2989558 * Math.exp(-0.1932605 * timeMinutes);
+}
+
+function calcVDOT(distMeters, timeMinutes) {
+  const velocity = distMeters / timeMinutes;
+  return calcVO2(velocity) / calcPercentVO2max(timeMinutes);
+}
+
+function predictTime(vdot, distMeters) {
+  // Bisection: find T where calcVDOT(distMeters, T) == vdot
+  // calcVDOT is monotonically decreasing w.r.t. T (longer time → lower VDOT)
+  let lo = 0.5, hi = 1440; // 30 sec to 24 hours in minutes
+  for (let i = 0; i < 80; i++) {
+    const mid = (lo + hi) / 2;
+    if (calcVDOT(distMeters, mid) > vdot) {
+      lo = mid; // estimated VDOT too high → time too short → increase
+    } else {
+      hi = mid; // estimated VDOT too low → time too long → decrease
+    }
+  }
+  return (lo + hi) / 2; // time in minutes
+}
+
 // 1. Fact Mode
 function calcFact() {
   let s = parsePositiveNumber(document.getElementById("fact-seconds").value);
@@ -230,8 +259,16 @@ function calcFact() {
   document.getElementById("res-pace-value").textContent = formatPace(paceSec);
   document.getElementById("res-speed-value").textContent = speed.toFixed(2);
 
+  // Daniels-Gilbert VDOT prediction
+  const distMeters = totalKm * 1000;
+  const timeMinutes = totalSec / 60;
+  const vdot = calcVDOT(distMeters, timeMinutes);
+
   [ { id: "pred-1k", km: 1 }, { id: "pred-3k", km: 3 }, { id: "pred-5k", km: 5 }, { id: "pred-10k", km: 10 }, { id: "pred-21k", km: 21.0975 } ]
-    .forEach(d => document.getElementById(d.id).textContent = formatTime(paceSec * d.km));
+    .forEach(d => {
+      const predictedMin = predictTime(vdot, d.km * 1000);
+      document.getElementById(d.id).textContent = formatTime(predictedMin * 60);
+    });
 
   document.getElementById("run-metrics-standard").classList.remove("hidden");
   document.getElementById("run-metrics-conv").classList.add("hidden");
