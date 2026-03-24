@@ -6,32 +6,8 @@ const tabPanels = document.querySelectorAll(".tab-panel");
 const macroButtons = document.querySelectorAll(".macro-slicer");
 const macroPanels = document.querySelectorAll(".macro-panel");
 
-const backendStatusEl = document.getElementById("backend-status");
-const backendStatusTextEl = document.getElementById("backend-status-text");
-
 const calorieInlineBtn = document.getElementById("calculate-inline-btn");
 const runningInlineBtn = document.getElementById("running-inline-btn");
-
-function setBackendStatus(state, text) {
-  backendStatusEl.classList.remove(
-    "status-loading",
-    "status-ok",
-    "status-error"
-  );
-
-  if (state === "ok") {
-    backendStatusEl.classList.add("status-ok");
-    backendStatusEl.textContent = "Доступен";
-  } else if (state === "error") {
-    backendStatusEl.classList.add("status-error");
-    backendStatusEl.textContent = "Ошибка";
-  } else {
-    backendStatusEl.classList.add("status-loading");
-    backendStatusEl.textContent = "Проверка...";
-  }
-
-  backendStatusTextEl.textContent = text;
-}
 
 function showError(boxId, textId, message) {
   const box = document.getElementById(boxId);
@@ -229,8 +205,14 @@ function calculateRunning() {
   const totalKm = km + mt / 1000;
 
   const paceTotalSeconds = totalSeconds / totalKm;
-  const paceMinutes = Math.floor(paceTotalSeconds / 60);
-  const paceSeconds = Math.round(paceTotalSeconds % 60);
+  let paceMinutes = Math.floor(paceTotalSeconds / 60);
+  let paceSeconds = Math.round(paceTotalSeconds % 60);
+
+  if (paceSeconds === 60) {
+    paceMinutes += 1;
+    paceSeconds = 0;
+  }
+
   const speed = totalKm / (totalSeconds / 3600);
 
   document.getElementById("pace-value").textContent =
@@ -256,9 +238,7 @@ function bindInlineButtons() {
   runningInlineBtn.addEventListener("click", calculateRunning);
 }
 
-async function testBackendConnection() {
-  setBackendStatus("loading", "Проверка соединения с Worker...");
-
+async function testBackendConnectionSilently() {
   try {
     const response = await fetch(`${WORKER_BASE_URL}/api/ping`, {
       method: "GET",
@@ -272,10 +252,9 @@ async function testBackendConnection() {
     }
 
     const data = await response.json();
-    setBackendStatus("ok", `Worker отвечает: ${JSON.stringify(data)}`);
+    console.log("Worker OK:", data);
   } catch (error) {
-    console.error("Backend connection error:", error);
-    setBackendStatus("error", `Нет связи с Worker: ${error.message}`);
+    console.error("Worker unavailable:", error);
   }
 }
 
@@ -298,7 +277,7 @@ function initApp() {
   bindInlineButtons();
   initTelegram();
   syncMainButton();
-  testBackendConnection();
+  testBackendConnectionSilently();
 }
 
 window.addEventListener("load", initApp);

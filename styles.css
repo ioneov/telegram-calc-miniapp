@@ -6,15 +6,6 @@
   --muted: #8e8e93;
   --radius: 24px;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-
-  --status-ok-bg: #e8f7ee;
-  --status-ok-text: #177245;
-
-  --status-error-bg: #fff1f0;
-  --status-error-text: #cf1322;
-
-  --status-loading-bg: #eef4ff;
-  --status-loading-text: #2458c6;
 }
 
 * {
@@ -34,58 +25,6 @@ body {
   max-width: 500px;
   margin: 0 auto;
   padding: 16px 16px 120px;
-}
-
-.top-status-card {
-  background: var(--card);
-  padding: 14px 16px;
-  border-radius: 18px;
-  box-shadow: var(--shadow);
-  margin-bottom: 16px;
-}
-
-.status-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.status-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-
-.status-badge {
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.status-loading {
-  background: var(--status-loading-bg);
-  color: var(--status-loading-text);
-}
-
-.status-ok {
-  background: var(--status-ok-bg);
-  color: var(--status-ok-text);
-}
-
-.status-error {
-  background: var(--status-error-bg);
-  color: var(--status-error-text);
-}
-
-.status-text {
-  font-size: 13px;
-  color: var(--text);
-  line-height: 1.35;
-  word-break: break-word;
 }
 
 /* Tabs */
