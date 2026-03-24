@@ -5,9 +5,10 @@ const tabButtons = document.querySelectorAll(".tab-item");
 const tabPanels = document.querySelectorAll(".tab-panel");
 
 // Running Tab State
-let activeRunMode = "conv"; // default
-let lastEditedConvSource = "pace"; // tracks which converter field was edited last ('pace' or 'speed')
+let activeRunMode = "conv"; 
+let lastEditedConvSource = "pace"; 
 let activeTargetDist = null;
+let activeFactDist = null; // State for Fact distance chips
 
 // UX Helpers
 function showError(boxId, textId, errorObj) {
@@ -73,7 +74,7 @@ function validateCaloriesForm() {
   if (age < 18 || age > 100) return { message: "Возраст: 18–100 лет", fields: ["age"] };
   if (height < 100 || height > 250) return { message: "Рост: 100–250 см", fields: ["height"] };
   if (weight < 30 || weight > 300) return { message: "Вес: 30–300 кг", fields: ["weight"] };
-  // Кросс-валидация: BMI 10–80
+  
   const heightM = height / 100;
   const bmi = weight / (heightM * heightM);
   if (bmi < 10 || bmi > 80) return { message: `Нереалистичное соотношение роста и веса (ИМТ ${bmi.toFixed(1)})`, fields: ["height", "weight"] };
@@ -152,17 +153,27 @@ function bindRunningSlicers() {
     });
   });
 
-  // Target Chips
-  document.querySelectorAll(".chip").forEach(chip => {
+  // Fact Chips
+  document.querySelectorAll("#fact-dist-chips .chip").forEach(chip => {
     chip.addEventListener("click", () => {
-      document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+      document.querySelectorAll("#fact-dist-chips .chip").forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      activeFactDist = chip.dataset.val;
+      document.getElementById("fact-custom-dist").classList.toggle("hidden", activeFactDist !== "custom");
+    });
+  });
+
+  // Target Chips
+  document.querySelectorAll("#target-dist-chips .chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      document.querySelectorAll("#target-dist-chips .chip").forEach(c => c.classList.remove("active"));
       chip.classList.add("active");
       activeTargetDist = chip.dataset.val;
       document.getElementById("target-custom-dist").classList.toggle("hidden", activeTargetDist !== "custom");
     });
   });
 
-  // Converter Listeners (to track intent & auto-calc)
+  // Converter Listeners
   const convPaceMin = document.getElementById("conv-pace-min");
   const convPaceSec = document.getElementById("conv-pace-sec");
   const convSpeed = document.getElementById("conv-speed");
@@ -212,54 +223,58 @@ function calcVDOT(distMeters, timeMinutes) {
 }
 
 function predictTime(vdot, distMeters) {
-  // Bisection: find T where calcVDOT(distMeters, T) == vdot
-  // calcVDOT is monotonically decreasing w.r.t. T (longer time → lower VDOT)
-  let lo = 0.5, hi = 1440; // 30 sec to 24 hours in minutes
+  let lo = 0.5, hi = 1440; 
   for (let i = 0; i < 80; i++) {
     const mid = (lo + hi) / 2;
     if (calcVDOT(distMeters, mid) > vdot) {
-      lo = mid; // estimated VDOT too high → time too short → increase
+      lo = mid; 
     } else {
-      hi = mid; // estimated VDOT too low → time too long → decrease
+      hi = mid; 
     }
   }
-  return (lo + hi) / 2; // time in minutes
+  return (lo + hi) / 2; 
 }
 
 // 1. Fact Mode
 function calcFact() {
+  if (!activeFactDist) return showError("running-error-box", "running-error-text", { message: "Выберите дистанцию", fields: [] });
+
   let s = parsePositiveNumber(document.getElementById("fact-seconds").value);
   let m = parsePositiveNumber(document.getElementById("fact-minutes").value);
   let h = parsePositiveNumber(document.getElementById("fact-hours").value);
-  let mt = parsePositiveNumber(document.getElementById("fact-meters").value);
-  let km = parsePositiveNumber(document.getElementById("fact-km").value);
 
   const t = normalizeTime(h, m, s);
   if (t.s || document.getElementById("fact-seconds").value) document.getElementById("fact-seconds").value = t.s || "";
   if (t.m || document.getElementById("fact-minutes").value) document.getElementById("fact-minutes").value = t.m || "";
   if (t.h || document.getElementById("fact-hours").value) document.getElementById("fact-hours").value = t.h || "";
-  if (mt >= 1000) { km += Math.floor(mt / 1000); mt = mt % 1000; }
-  if (mt || document.getElementById("fact-meters").value) document.getElementById("fact-meters").value = mt || "";
-  if (km || document.getElementById("fact-km").value) document.getElementById("fact-km").value = km || "";
+
+  let totalKm = 0;
+  if (activeFactDist === "custom") {
+    let km = parsePositiveNumber(document.getElementById("fact-km").value);
+    let mt = parsePositiveNumber(document.getElementById("fact-meters").value);
+    if (mt >= 1000) { km += Math.floor(mt / 1000); mt = mt % 1000; }
+    if (mt || document.getElementById("fact-meters").value) document.getElementById("fact-meters").value = mt || "";
+    if (km || document.getElementById("fact-km").value) document.getElementById("fact-km").value = km || "";
+    totalKm = km + mt / 1000;
+  } else {
+    totalKm = parseFloat(activeFactDist);
+  }
 
   const totalSec = t.h * 3600 + t.m * 60 + t.s;
-  const totalKm = km + mt / 1000;
 
-  if (totalSec <= 0 && totalKm <= 0) return showError("running-error-box", "running-error-text", { message: "Укажите время и дистанцию", fields: ["fact-hours", "fact-km"] });
   if (totalSec <= 0) return showError("running-error-box", "running-error-text", { message: "Укажите время бега", fields: ["fact-minutes"] });
   if (totalKm <= 0) return showError("running-error-box", "running-error-text", { message: "Укажите дистанцию", fields: ["fact-km"] });
 
   const paceSec = totalSec / totalKm;
   const paceMinPerKm = paceSec / 60;
-  if (paceMinPerKm > 60) return showError("running-error-box", "running-error-text", { message: "Темп > 60 мин/км — проверьте данные", fields: ["fact-minutes", "fact-km"] });
-  if (paceMinPerKm < 0.5) return showError("running-error-box", "running-error-text", { message: "Темп < 30 сек/км — проверьте данные", fields: ["fact-minutes", "fact-km"] });
+  if (paceMinPerKm > 60) return showError("running-error-box", "running-error-text", { message: "Темп > 60 мин/км", fields: ["fact-minutes"] });
+  if (paceMinPerKm < 0.5) return showError("running-error-box", "running-error-text", { message: "Темп < 30 сек/км", fields: ["fact-minutes"] });
 
   const speed = totalKm / (totalSec / 3600);
 
   document.getElementById("res-pace-value").textContent = formatPace(paceSec);
   document.getElementById("res-speed-value").textContent = speed.toFixed(2);
 
-  // Daniels-Gilbert VDOT prediction
   const distMeters = totalKm * 1000;
   const timeMinutes = totalSec / 60;
   const vdot = calcVDOT(distMeters, timeMinutes);
@@ -272,27 +287,21 @@ function calcFact() {
     { id: "pred-21k", lossId: "wloss-21k", gainId: "wgain-21k", km: 21.0975 }
   ];
 
-  // Base predictions
   predDistances.forEach(d => {
     const predictedMin = predictTime(vdot, d.km * 1000);
     document.getElementById(d.id).textContent = formatTime(predictedMin * 60);
   });
 
-  // Weight-adjusted predictions
   const weight = parsePositiveNumber(document.getElementById("fact-weight").value);
   const hasWeight = weight >= 30 && weight <= 300;
 
   if (hasWeight) {
-    const weightLoss = weight - 5;
-    const weightGain = weight + 5;
-    const vdotLoss = vdot * (weight / weightLoss);
-    const vdotGain = vdot * (weight / weightGain);
+    const vdotLoss = vdot * (weight / (weight - 5));
+    const vdotGain = vdot * (weight / (weight + 5));
 
     predDistances.forEach(d => {
-      const timeLoss = predictTime(vdotLoss, d.km * 1000);
-      const timeGain = predictTime(vdotGain, d.km * 1000);
-      document.getElementById(d.lossId).textContent = formatTime(timeLoss * 60);
-      document.getElementById(d.gainId).textContent = formatTime(timeGain * 60);
+      document.getElementById(d.lossId).textContent = formatTime(predictTime(vdotLoss, d.km * 1000) * 60);
+      document.getElementById(d.gainId).textContent = formatTime(predictTime(vdotGain, d.km * 1000) * 60);
     });
 
     document.getElementById("weight-loss-block").classList.remove("hidden");
@@ -338,10 +347,6 @@ function calcTarget() {
   if (totalSec <= 0) return showError("running-error-box", "running-error-text", { message: "Укажите желаемое время", fields: ["target-minutes"] });
 
   const paceSec = totalSec / totalKm;
-  const paceMinPerKm = paceSec / 60;
-  if (paceMinPerKm > 60) return showError("running-error-box", "running-error-text", { message: "Темп > 60 мин/км — проверьте данные", fields: ["target-minutes", "target-km"] });
-  if (paceMinPerKm < 0.5) return showError("running-error-box", "running-error-text", { message: "Темп < 30 сек/км — проверьте данные", fields: ["target-minutes", "target-km"] });
-
   const speed = totalKm / (totalSec / 3600);
 
   document.getElementById("res-pace-value").textContent = formatPace(paceSec);
@@ -358,7 +363,7 @@ function calcTarget() {
 let convTimeout;
 function handleAutoCalcConv() {
   clearTimeout(convTimeout);
-  convTimeout = setTimeout(calcConv, 300); // slight debounce for smooth typing
+  convTimeout = setTimeout(calcConv, 300);
 }
 
 function calcConv() {
@@ -371,9 +376,8 @@ function calcConv() {
   if (lastEditedConvSource === "pace") {
     let m = parsePositiveNumber(document.getElementById("conv-pace-min").value);
     let s = parsePositiveNumber(document.getElementById("conv-pace-sec").value);
-    if (!m && !s) return; // Silent return for empty auto-calc
+    if (!m && !s) return;
 
-    // Нормализуем только секунды → минуты (часы не нужны для темпа)
     if (s >= 60) { m += Math.floor(s / 60); s = s % 60; }
     if (s || document.getElementById("conv-pace-sec").value) document.getElementById("conv-pace-sec").value = s || "";
     if (m || document.getElementById("conv-pace-min").value) document.getElementById("conv-pace-min").value = m || "";
@@ -382,12 +386,10 @@ function calcConv() {
     if (totalSecPerKm <= 0 || totalSecPerKm < 30 || totalSecPerKm > 3600) return;
 
     const speed = 3600 / totalSecPerKm;
-    const speedRounded = (Math.round(speed * 10) / 10).toFixed(1);
-
     vLabel.textContent = "Скорость";
     vMain.textContent = speed.toFixed(2);
     vUnit.textContent = "км/ч";
-    vSub.textContent = `Округленно для дорожки: ${speedRounded}`;
+    vSub.textContent = `Округленно для дорожки: ${(Math.round(speed * 10) / 10).toFixed(1)}`;
     
   } else {
     let speed = parsePositiveNumber(document.getElementById("conv-speed").value);
@@ -407,7 +409,6 @@ function calcConv() {
   document.getElementById("run-metrics-conv").classList.remove("hidden");
 }
 
-// Main Calculate Dispatcher
 function calculateRunning() {
   clearErrors();
   if (activeRunMode === "fact") calcFact();
@@ -430,7 +431,11 @@ function handleCalculateAction() {
 function initTelegram() {
   if (!tg) return;
   tg.ready(); tg.expand();
-  if (tg.MainButton) { tg.MainButton.setText("РАССЧИТАТЬ"); tg.MainButton.show(); tg.MainButton.onClick(handleCalculateAction); }
+  if (tg.MainButton) { 
+    tg.MainButton.setText("РАССЧИТАТЬ"); 
+    tg.MainButton.show(); 
+    tg.MainButton.onClick(handleCalculateAction); 
+  }
 }
 
 function initApp() {
@@ -446,7 +451,6 @@ function initApp() {
 
   bindRunningSlicers();
 
-  // Prevent page reload on Enter in any form
   document.querySelectorAll("form").forEach(f => {
     f.addEventListener("submit", e => {
       e.preventDefault();

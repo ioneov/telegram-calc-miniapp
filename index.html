@@ -217,7 +217,16 @@
             </div>
             <div class="run-input-group">
               <span class="field-label">Дистанция</span>
-              <div class="dist-grid">
+              <div class="chip-group" id="fact-dist-chips">
+                <button type="button" class="chip" data-val="1">1 км</button>
+                <button type="button" class="chip" data-val="3">3 км</button>
+                <button type="button" class="chip" data-val="5">5 км</button>
+                <button type="button" class="chip" data-val="10">10 км</button>
+                <button type="button" class="chip" data-val="21.0975">21.1</button>
+                <button type="button" class="chip" data-val="42.195">42.2</button>
+                <button type="button" class="chip" data-val="custom">Своя</button>
+              </div>
+              <div class="dist-grid hidden mt-8" id="fact-custom-dist">
                 <input id="fact-km" type="number" inputmode="decimal" min="0" placeholder="0" />
                 <span class="u">км</span>
                 <input id="fact-meters" type="number" inputmode="numeric" min="0" placeholder="0" />
@@ -330,7 +339,7 @@
 
           <div id="weight-loss-block" class="hidden">
             <hr class="banner-divider" />
-            <span class="m-label weight-label-loss">⬇ Потеря веса −5 кг</span>
+            <span class="m-label weight-label-loss">Потеря веса −5 кг</span>
             <div class="predict-grid">
               <div class="predict-item predict-loss"><div class="predict-dist">1 км</div><div class="predict-time" id="wloss-1k">-</div></div>
               <div class="predict-item predict-loss"><div class="predict-dist">3 км</div><div class="predict-time" id="wloss-3k">-</div></div>
@@ -342,7 +351,7 @@
 
           <div id="weight-gain-block" class="hidden">
             <hr class="banner-divider" />
-            <span class="m-label weight-label-gain">⬆ Набор веса +5 кг</span>
+            <span class="m-label weight-label-gain">Набор веса +5 кг</span>
             <div class="predict-grid">
               <div class="predict-item predict-gain"><div class="predict-dist">1 км</div><div class="predict-time" id="wgain-1k">-</div></div>
               <div class="predict-item predict-gain"><div class="predict-dist">3 км</div><div class="predict-time" id="wgain-3k">-</div></div>
