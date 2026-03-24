@@ -2,10 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="color-scheme" content="light" />
   <meta name="theme-color" content="#f7f7f7" />
   <title>Калькуляторы</title>
@@ -14,10 +11,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -93,22 +87,32 @@
           <div class="metrics-grid">
             <div class="metric-item">
               <span class="m-label">BMR</span>
-              <span class="m-value" id="bmr-value">-</span>
+              <div class="m-val-wrap">
+                <span class="m-value" id="bmr-value">-</span> <span class="m-unit">ккал</span>
+              </div>
+              <span class="m-sub">Базовый обмен</span>
             </div>
 
             <div class="metric-item">
               <span class="m-label">Поддержание</span>
-              <span class="m-value" id="maintain-value">-</span>
+              <div class="m-val-wrap">
+                <span class="m-value" id="maintain-value">-</span> <span class="m-unit">ккал</span>
+              </div>
+              <span class="m-sub">с учетом активности</span>
             </div>
 
             <div class="metric-item accent-cut">
-              <span class="m-label">Сброс (-15%)</span>
-              <span class="m-value" id="cut-value">-</span>
+              <span class="m-label">Сброс</span>
+              <div class="m-val-wrap">
+                <span class="m-value" id="cut-value">-</span> <span class="m-unit">ккал</span>
+              </div>
             </div>
 
             <div class="metric-item accent-bulk">
-              <span class="m-label">Набор (+15%)</span>
-              <span class="m-value" id="bulk-value">-</span>
+              <span class="m-label">Набор</span>
+              <div class="m-val-wrap">
+                <span class="m-value" id="bulk-value">-</span> <span class="m-unit">ккал</span>
+              </div>
             </div>
           </div>
         </section>
@@ -122,7 +126,7 @@
 
           <div class="macros-display">
             <div id="macros-warning" class="macros-warning hidden">
-              ⚠️ Для выбранной цели углеводов получается мало
+              ⚠️ Для выбранной цели углеводов получается слишком мало (< 50 г)
             </div>
 
             <div class="macro-panel" id="macro-panel-cut">
@@ -130,14 +134,17 @@
                 <div class="macro-col">
                   <span>Белки</span>
                   <strong id="cut-protein">-</strong>
+                  <div class="macro-details" id="cut-p-details"></div>
                 </div>
                 <div class="macro-col">
                   <span>Жиры</span>
                   <strong id="cut-fat">-</strong>
+                  <div class="macro-details" id="cut-f-details"></div>
                 </div>
                 <div class="macro-col">
                   <span>Углеводы</span>
                   <strong id="cut-carbs">-</strong>
+                  <div class="macro-details" id="cut-c-details"></div>
                 </div>
               </div>
             </div>
@@ -147,14 +154,17 @@
                 <div class="macro-col">
                   <span>Белки</span>
                   <strong id="maintain-protein">-</strong>
+                  <div class="macro-details" id="maintain-p-details"></div>
                 </div>
                 <div class="macro-col">
                   <span>Жиры</span>
                   <strong id="maintain-fat">-</strong>
+                  <div class="macro-details" id="maintain-f-details"></div>
                 </div>
                 <div class="macro-col">
                   <span>Углеводы</span>
                   <strong id="maintain-carbs">-</strong>
+                  <div class="macro-details" id="maintain-c-details"></div>
                 </div>
               </div>
             </div>
@@ -164,14 +174,17 @@
                 <div class="macro-col">
                   <span>Белки</span>
                   <strong id="bulk-protein">-</strong>
+                  <div class="macro-details" id="bulk-p-details"></div>
                 </div>
                 <div class="macro-col">
                   <span>Жиры</span>
                   <strong id="bulk-fat">-</strong>
+                  <div class="macro-details" id="bulk-f-details"></div>
                 </div>
                 <div class="macro-col">
                   <span>Углеводы</span>
                   <strong id="bulk-carbs">-</strong>
+                  <div class="macro-details" id="bulk-c-details"></div>
                 </div>
               </div>
             </div>
@@ -187,13 +200,13 @@
             <div class="run-input-group">
               <span class="field-label">Время бега</span>
               <div class="hms-grid">
-                <input id="run-hours" type="number" inputmode="numeric" min="0" value="0" />
+                <input id="run-hours" type="number" inputmode="numeric" min="0" placeholder="0" />
                 <span class="u">ч</span>
 
-                <input id="run-minutes" type="number" inputmode="numeric" min="0" max="59" value="0" />
+                <input id="run-minutes" type="number" inputmode="numeric" min="0" placeholder="0" />
                 <span class="u">м</span>
 
-                <input id="run-seconds" type="number" inputmode="numeric" min="0" max="59" value="0" />
+                <input id="run-seconds" type="number" inputmode="numeric" min="0" placeholder="0" />
                 <span class="u">с</span>
               </div>
             </div>
@@ -201,10 +214,10 @@
             <div class="run-input-group">
               <span class="field-label">Дистанция</span>
               <div class="dist-grid">
-                <input id="run-km" type="number" inputmode="decimal" min="0" value="0" />
+                <input id="run-km" type="number" inputmode="decimal" min="0" placeholder="0" />
                 <span class="u">км</span>
 
-                <input id="run-meters" type="number" inputmode="numeric" min="0" max="999" value="0" />
+                <input id="run-meters" type="number" inputmode="numeric" min="0" placeholder="0" />
                 <span class="u">м</span>
               </div>
             </div>
@@ -219,18 +232,34 @@
           </button>
         </section>
 
-        <section class="result-banner running-res">
+        <section id="running-result" class="result-banner running-res">
           <h2 class="banner-title">Результат</h2>
 
           <div class="metrics-grid">
             <div class="metric-item">
-              <span class="m-label">Темп (мин/км)</span>
-              <span class="m-value" id="pace-value">-</span>
+              <span class="m-label">Темп</span>
+              <div class="m-val-wrap">
+                <span class="m-value" id="pace-value">-</span> <span class="m-unit">мин/км</span>
+              </div>
             </div>
 
             <div class="metric-item">
-              <span class="m-label">Скорость (км/ч)</span>
-              <span class="m-value" id="speed-value">-</span>
+              <span class="m-label">Скорость</span>
+              <div class="m-val-wrap">
+                <span class="m-value" id="speed-value">-</span> <span class="m-unit">км/ч</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="predictions-block" class="hidden">
+            <hr class="banner-divider" />
+            <span class="m-label">Прогноз времени при таком темпе</span>
+            <div class="predict-grid">
+              <div class="predict-item"><div class="predict-dist">1 км</div><div class="predict-time" id="pred-1k">-</div></div>
+              <div class="predict-item"><div class="predict-dist">3 км</div><div class="predict-time" id="pred-3k">-</div></div>
+              <div class="predict-item"><div class="predict-dist">5 км</div><div class="predict-time" id="pred-5k">-</div></div>
+              <div class="predict-item"><div class="predict-dist">10 км</div><div class="predict-time" id="pred-10k">-</div></div>
+              <div class="predict-item"><div class="predict-dist">21.1 км</div><div class="predict-time" id="pred-21k">-</div></div>
             </div>
           </div>
         </section>
