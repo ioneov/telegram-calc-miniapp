@@ -29,8 +29,17 @@
           <img src="run-svg.svg" alt="Бег" />
         </div>
       </button>
+
+      <button type="button" class="tab-item" id="tab-pano-btn" data-tab="pano">
+        <div class="tab-icon-card">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 16h5l3-8 4 16 4-10 3 6h5"/>
+          </svg>
+        </div>
+      </button>
     </nav>
 
+    <!-- ==================== CALORIES TAB ==================== -->
     <section id="tab-calories" class="tab-panel active">
       <div class="calc-card">
         <section class="form-side">
@@ -189,6 +198,7 @@
       </div>
     </section>
 
+    <!-- ==================== RUNNING TAB ==================== -->
     <section id="tab-running" class="tab-panel">
       <div class="calc-card">
         <section class="form-side">
@@ -361,6 +371,130 @@
             </div>
           </div>
         </section>
+      </div>
+    </section>
+
+    <!-- ==================== PANO TAB ==================== -->
+    <section id="tab-pano" class="tab-panel">
+      <div class="calc-card">
+        <section class="form-side">
+          <div class="macro-slicers mb-16">
+            <button type="button" class="macro-slicer active" data-pano-mode="direct">Прямой ввод</button>
+            <button type="button" class="macro-slicer" data-pano-mode="test">30-мин тест</button>
+          </div>
+
+          <!-- Direct input -->
+          <form id="pano-mode-direct" class="form-stack" novalidate>
+            <div class="fields-grid">
+              <label>
+                <span class="field-label">Пороговый темп</span>
+                <div class="hms-grid" style="margin-top:0;">
+                  <input id="pano-pace-min" type="number" inputmode="numeric" min="0" placeholder="5" />
+                  <span class="u">:</span>
+                  <input id="pano-pace-sec" type="number" inputmode="numeric" min="0" placeholder="00" />
+                </div>
+              </label>
+              <label>
+                <span class="field-label">Пороговый пульс</span>
+                <input id="pano-hr" type="number" inputmode="numeric" min="100" max="220" placeholder="165" />
+                <span class="field-hint">уд/мин</span>
+              </label>
+            </div>
+          </form>
+
+          <!-- 30-min test -->
+          <form id="pano-mode-test" class="form-stack hidden" novalidate>
+            <button type="button" class="pano-hint-toggle" id="pano-hint-btn">
+              <span>Как выполнять тест?</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 6l4 4 4-4"/>
+              </svg>
+            </button>
+            <div class="pano-hint-body hidden" id="pano-hint-body">
+              <p>Разомнитесь 10–15 минут в легком темпе. Затем бегите <strong>30 минут</strong> с максимальным устойчивым усилием (как на гонке). Средний пульс за <strong>последние 20 минут</strong> = ваш пороговый пульс (LTHR). Средний темп за весь тест ≈ ваш пороговый темп.</p>
+            </div>
+
+            <div class="macro-slicers mt-12">
+              <button type="button" class="macro-slicer active" data-test-input="distance">Дистанция</button>
+              <button type="button" class="macro-slicer" data-test-input="pace">Средний темп</button>
+            </div>
+
+            <div id="test-distance-input" class="mt-12">
+              <label>
+                <span class="field-label">Дистанция за 30 мин, км</span>
+                <input id="test-dist" type="number" inputmode="decimal" min="0" step="0.01" placeholder="5.50" style="max-width:160px;" />
+              </label>
+            </div>
+
+            <div id="test-pace-input" class="hidden mt-12">
+              <label>
+                <span class="field-label">Средний темп за тест</span>
+                <div class="hms-grid" style="margin-top:0;">
+                  <input id="test-pace-min" type="number" inputmode="numeric" min="0" placeholder="5" />
+                  <span class="u">:</span>
+                  <input id="test-pace-sec" type="number" inputmode="numeric" min="0" placeholder="27" />
+                </div>
+              </label>
+            </div>
+
+            <div class="mt-12">
+              <label>
+                <span class="field-label">Средний пульс (последние 20 мин)</span>
+                <input id="test-hr" type="number" inputmode="numeric" min="100" max="220" placeholder="168" style="max-width:160px;" />
+                <span class="field-hint">уд/мин</span>
+              </label>
+            </div>
+          </form>
+
+          <div id="pano-error-box" class="error-box hidden">
+            <p id="pano-error-text"></p>
+          </div>
+        </section>
+
+        <!-- Threshold values -->
+        <section id="pano-result" class="result-banner hidden">
+          <h2 class="banner-title">Пороговые значения</h2>
+          <div class="metrics-grid">
+            <div class="metric-item">
+              <span class="m-label">Темп ПАНО</span>
+              <div class="m-val-wrap">
+                <span class="m-value" id="pano-res-pace">-</span>
+                <span class="m-unit">мин/км</span>
+              </div>
+            </div>
+            <div class="metric-item">
+              <span class="m-label">Скорость</span>
+              <div class="m-val-wrap">
+                <span class="m-value" id="pano-res-speed">-</span>
+                <span class="m-unit">км/ч</span>
+              </div>
+            </div>
+            <div class="metric-item full-width-metric">
+              <span class="m-label">Пороговый пульс (LTHR)</span>
+              <div class="m-val-wrap">
+                <span class="m-value" id="pano-res-hr">-</span>
+                <span class="m-unit">уд/мин</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- HR Zones -->
+        <section id="pano-hr-zones" class="macros-card hidden">
+          <h3 class="zone-section-title">Пульсовые зоны</h3>
+          <div id="pano-hr-zones-table" class="zone-table"></div>
+        </section>
+
+        <!-- Pace Zones -->
+        <section id="pano-pace-zones" class="macros-card hidden">
+          <h3 class="zone-section-title">Темповые зоны</h3>
+          <div id="pano-pace-zones-table" class="zone-table"></div>
+        </section>
+
+        <!-- Copy button -->
+        <button type="button" id="pano-copy-btn" class="action-btn hidden">
+          Скопировать результат
+        </button>
       </div>
     </section>
   </main>

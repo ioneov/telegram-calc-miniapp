@@ -8,9 +8,14 @@ const tabPanels = document.querySelectorAll(".tab-panel");
 let activeRunMode = "conv"; 
 let lastEditedConvSource = "pace"; 
 let activeTargetDist = null;
-let activeFactDist = null; // State for Fact distance chips
+let activeFactDist = null;
 
-// UX Helpers
+// PANO Tab State
+let activePanoMode = "direct";
+let activeTestInput = "distance";
+
+// ============ UX HELPERS ============
+
 function showError(boxId, textId, errorObj) {
   const box = document.getElementById(boxId);
   const text = document.getElementById(textId);
@@ -46,7 +51,40 @@ function parsePositiveNumber(value) {
   return Number.isFinite(num) && num > 0 ? num : 0;
 }
 
-// Tabs Binding
+// ============ SHARED FORMAT UTILS ============
+
+function normalizeTime(h, m, s) {
+  if (s >= 60) { m += Math.floor(s / 60); s = s % 60; }
+  if (m >= 60) { h += Math.floor(m / 60); m = m % 60; }
+  return { h, m, s };
+}
+
+function formatPace(totalSecondsPerKm) {
+  let m = Math.floor(totalSecondsPerKm / 60);
+  let s = Math.round(totalSecondsPerKm % 60);
+  if (s === 60) { m += 1; s = 0; }
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function formatTime(totalSeconds) {
+  let h = Math.floor(totalSeconds / 3600);
+  let m = Math.floor((totalSeconds % 3600) / 60);
+  let s = Math.round(totalSeconds % 60);
+  if (s === 60) { m += 1; s = 0; }
+  if (m === 60) { h += 1; m = 0; }
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
+}
+
+/** Parse pace input fields (min + sec) into total seconds. Normalizes overflow. */
+function parsePaceInput(minId, secId) {
+  let m = parsePositiveNumber(document.getElementById(minId).value);
+  let s = parsePositiveNumber(document.getElementById(secId).value);
+  if (s >= 60) { m += Math.floor(s / 60); s = s % 60; }
+  return { min: m, sec: s, total: m * 60 + s };
+}
+
+// ============ TABS ============
+
 function switchTab(tabName) {
   tabButtons.forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tabName));
   tabPanels.forEach(panel => panel.classList.toggle("active", panel.id === `tab-${tabName}`));
@@ -60,7 +98,8 @@ function syncMainButton() {
   tg.MainButton.enable();
 }
 
-// Calories Logic
+// ============ CALORIES LOGIC ============
+
 function validateCaloriesForm() {
   const age = parsePositiveNumber(document.getElementById("age").value);
   const height = parsePositiveNumber(document.getElementById("height").value);
@@ -136,7 +175,8 @@ function updateMacros(maintainKcal, weight) {
   document.getElementById("macros-warning").classList.toggle("hidden", !hasLowCarb);
 }
 
-// Running Logic
+// ============ RUNNING LOGIC ============
+
 function bindRunningSlicers() {
   document.querySelectorAll(".macro-slicer[data-run-mode]").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -184,28 +224,6 @@ function bindRunningSlicers() {
   convPaceMin.addEventListener("input", onPaceInput);
   convPaceSec.addEventListener("input", onPaceInput);
   convSpeed.addEventListener("input", onSpeedInput);
-}
-
-function normalizeTime(h, m, s) {
-  if (s >= 60) { m += Math.floor(s / 60); s = s % 60; }
-  if (m >= 60) { h += Math.floor(m / 60); m = m % 60; }
-  return { h, m, s };
-}
-
-function formatPace(totalSecondsPerKm) {
-  let m = Math.floor(totalSecondsPerKm / 60);
-  let s = Math.round(totalSecondsPerKm % 60);
-  if (s === 60) { m += 1; s = 0; }
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
-
-function formatTime(totalSeconds) {
-  let h = Math.floor(totalSeconds / 3600);
-  let m = Math.floor((totalSeconds % 3600) / 60);
-  let s = Math.round(totalSeconds % 60);
-  if (s === 60) { m += 1; s = 0; }
-  if (m === 60) { h += 1; m = 0; }
-  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
 }
 
 // Daniels-Gilbert VO2max prediction model
@@ -422,10 +440,243 @@ function calculateRunning() {
   }
 }
 
+// ============ PANO MODULE ============
+
+const PANO_MIN_PACE = 90;   // 1:30/km
+const PANO_MAX_PACE = 900;  // 15:00/km
+const PANO_MIN_HR = 100;
+const PANO_MAX_HR = 220;
+
+function bindPanoSlicers() {
+  // Mode toggle: direct / test
+  document.querySelectorAll(".macro-slicer[data-pano-mode]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".macro-slicer[data-pano-mode]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activePanoMode = btn.dataset.panoMode;
+      document.getElementById("pano-mode-direct").classList.toggle("hidden", activePanoMode !== "direct");
+      document.getElementById("pano-mode-test").classList.toggle("hidden", activePanoMode !== "test");
+      clearErrors();
+    });
+  });
+
+  // Test sub-toggle: distance / pace
+  document.querySelectorAll(".macro-slicer[data-test-input]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".macro-slicer[data-test-input]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeTestInput = btn.dataset.testInput;
+      document.getElementById("test-distance-input").classList.toggle("hidden", activeTestInput !== "distance");
+      document.getElementById("test-pace-input").classList.toggle("hidden", activeTestInput !== "pace");
+    });
+  });
+
+  // Hint toggle
+  const hintBtn = document.getElementById("pano-hint-btn");
+  const hintBody = document.getElementById("pano-hint-body");
+  if (hintBtn && hintBody) {
+    hintBtn.addEventListener("click", () => {
+      hintBody.classList.toggle("hidden");
+      hintBtn.classList.toggle("expanded");
+    });
+  }
+
+  // Copy button
+  document.getElementById("pano-copy-btn")?.addEventListener("click", copyPanoResults);
+}
+
+function calculatePano() {
+  clearErrors();
+
+  let thresholdPaceSec, lthr;
+
+  if (activePanoMode === "direct") {
+    const pace = parsePaceInput("pano-pace-min", "pano-pace-sec");
+    thresholdPaceSec = pace.total;
+    lthr = parsePositiveNumber(document.getElementById("pano-hr").value);
+
+    if (thresholdPaceSec <= 0) {
+      return showError("pano-error-box", "pano-error-text", { message: "Укажите пороговый темп", fields: ["pano-pace-min", "pano-pace-sec"] });
+    }
+    if (thresholdPaceSec < PANO_MIN_PACE || thresholdPaceSec > PANO_MAX_PACE) {
+      return showError("pano-error-box", "pano-error-text", { message: "Темп должен быть от 1:30 до 15:00 мин/км", fields: ["pano-pace-min"] });
+    }
+    if (!lthr || lthr < PANO_MIN_HR || lthr > PANO_MAX_HR) {
+      return showError("pano-error-box", "pano-error-text", { message: "Пульс должен быть от 100 до 220 уд/мин", fields: ["pano-hr"] });
+    }
+
+  } else {
+    // Test mode
+    if (activeTestInput === "distance") {
+      const dist = parsePositiveNumber(document.getElementById("test-dist").value);
+      if (!dist) {
+        return showError("pano-error-box", "pano-error-text", { message: "Укажите дистанцию", fields: ["test-dist"] });
+      }
+      if (dist < 1 || dist > 15) {
+        return showError("pano-error-box", "pano-error-text", { message: "Дистанция должна быть от 1 до 15 км", fields: ["test-dist"] });
+      }
+      thresholdPaceSec = 1800 / dist; // 30 min = 1800 sec
+    } else {
+      const pace = parsePaceInput("test-pace-min", "test-pace-sec");
+      thresholdPaceSec = pace.total;
+      if (thresholdPaceSec <= 0) {
+        return showError("pano-error-box", "pano-error-text", { message: "Укажите средний темп", fields: ["test-pace-min", "test-pace-sec"] });
+      }
+    }
+
+    if (thresholdPaceSec < PANO_MIN_PACE || thresholdPaceSec > PANO_MAX_PACE) {
+      return showError("pano-error-box", "pano-error-text", { message: "Рассчитанный темп вне диапазона (1:30 – 15:00 мин/км)", fields: [] });
+    }
+
+    lthr = parsePositiveNumber(document.getElementById("test-hr").value);
+    if (!lthr || lthr < PANO_MIN_HR || lthr > PANO_MAX_HR) {
+      return showError("pano-error-box", "pano-error-text", { message: "Пульс должен быть от 100 до 220 уд/мин", fields: ["test-hr"] });
+    }
+  }
+
+  renderPanoResults(thresholdPaceSec, Math.round(lthr));
+}
+
+function renderPanoResults(paceSec, lthr) {
+  const speed = 3600 / paceSec;
+
+  document.getElementById("pano-res-pace").textContent = formatPace(paceSec);
+  document.getElementById("pano-res-speed").textContent = speed.toFixed(2);
+  document.getElementById("pano-res-hr").textContent = String(lthr);
+
+  renderHRZones(lthr);
+  renderPaceZones(paceSec);
+
+  document.getElementById("pano-result").classList.remove("hidden");
+  document.getElementById("pano-hr-zones").classList.remove("hidden");
+  document.getElementById("pano-pace-zones").classList.remove("hidden");
+  document.getElementById("pano-copy-btn").classList.remove("hidden");
+
+  triggerUpdateAnimation("#pano-result .m-value");
+  scrollToElement("pano-result");
+}
+
+function renderHRZones(lthr) {
+  const zones = [
+    { name: "Z1",  pctLo: null, pctHi: 0.85, color: "#D0ECFF", textColor: "#1a3a5c", label: "Восстановление" },
+    { name: "Z2",  pctLo: 0.85, pctHi: 0.89, color: "#A0D4F5", textColor: "#12425e", label: "Аэробная" },
+    { name: "Z3",  pctLo: 0.90, pctHi: 0.94, color: "#B5E6A3", textColor: "#2d5a1e", label: "Темповая" },
+    { name: "Z4",  pctLo: 0.95, pctHi: 0.99, color: "#FFE08A", textColor: "#6b5900", label: "Подпороговая" },
+    { name: "Z5a", pctLo: 1.00, pctHi: 1.02, color: "#FFB89A", textColor: "#7a2e0e", label: "Пороговая" },
+    { name: "Z5b", pctLo: 1.03, pctHi: 1.06, color: "#F5937A", textColor: "#5c1a0a", label: "Анаэробная" },
+    { name: "Z5c", pctLo: 1.06, pctHi: null, color: "#E06060", textColor: "#fff",     label: "Нейромышечная" },
+  ];
+
+  const container = document.getElementById("pano-hr-zones-table");
+  container.innerHTML = zones.map(z => {
+    let range;
+    if (z.pctLo === null) range = `< ${Math.round(lthr * z.pctHi)}`;
+    else if (z.pctHi === null) range = `> ${Math.round(lthr * z.pctLo)}`;
+    else range = `${Math.round(lthr * z.pctLo)}–${Math.round(lthr * z.pctHi)}`;
+
+    return `<div class="zone-row">
+      <span class="zone-badge" style="background:${z.color};color:${z.textColor}">${z.name}</span>
+      <span class="zone-label">${z.label}</span>
+      <span class="zone-range">${range}</span>
+    </div>`;
+  }).join("");
+}
+
+function renderPaceZones(paceSec) {
+  const zones = [
+    { name: "Восстановление",       addLo: 90,  addHi: 150,  color: "#D0ECFF", desc: "Восстановительные пробежки" },
+    { name: "Легкий аэробный",       addLo: 45,  addHi: 90,   color: "#A0D4F5", desc: "Основной беговой объем" },
+    { name: "Умеренный / steady",    addLo: 20,  addHi: 45,   color: "#B5E6A3", desc: "Длительные, темповая выносливость" },
+    { name: "Пороговый",             addLo: -5,  addHi: 15,   color: "#FFE08A", desc: "Темповые отрезки, крейсерские интервалы" },
+    { name: "Интервальный / VO₂max", addLo: -40, addHi: -15,  color: "#FFB89A", desc: "Короткие интервалы высокой интенсивности" },
+  ];
+
+  const container = document.getElementById("pano-pace-zones-table");
+  container.innerHTML = zones.map(z => {
+    const fast = Math.max(PANO_MIN_PACE, paceSec + z.addLo);
+    const slow = Math.min(PANO_MAX_PACE, paceSec + z.addHi);
+    const rangeTxt = `${formatPace(fast)} – ${formatPace(slow)}`;
+
+    return `<div class="pace-zone-row">
+      <div class="pace-zone-header">
+        <div class="pace-zone-name">
+          <span class="pace-zone-dot" style="background:${z.color}"></span>
+          <span class="pace-zone-title">${z.name}</span>
+        </div>
+        <span class="pace-zone-range">${rangeTxt}</span>
+      </div>
+      <div class="pace-zone-desc">${z.desc}</div>
+    </div>`;
+  }).join("");
+}
+
+function buildPanoResultText() {
+  const pace = document.getElementById("pano-res-pace").textContent;
+  const speed = document.getElementById("pano-res-speed").textContent;
+  const hr = document.getElementById("pano-res-hr").textContent;
+
+  let text = `🏃 ПАНО\n\nТемп: ${pace} мин/км\nСкорость: ${speed} км/ч\nПульс: ${hr} уд/мин\n`;
+
+  text += `\n❤️ Пульсовые зоны\n`;
+  document.querySelectorAll("#pano-hr-zones-table .zone-row").forEach(row => {
+    const badge = row.querySelector(".zone-badge").textContent;
+    const label = row.querySelector(".zone-label").textContent;
+    const range = row.querySelector(".zone-range").textContent;
+    text += `${badge}: ${range} уд/мин — ${label}\n`;
+  });
+
+  text += `\n👟 Темповые зоны\n`;
+  document.querySelectorAll("#pano-pace-zones-table .pace-zone-row").forEach(row => {
+    const title = row.querySelector(".pace-zone-title").textContent;
+    const range = row.querySelector(".pace-zone-range").textContent;
+    const desc = row.querySelector(".pace-zone-desc").textContent;
+    text += `${title}: ${range} — ${desc}\n`;
+  });
+
+  return text;
+}
+
+function copyPanoResults() {
+  const text = buildPanoResultText();
+  const btn = document.getElementById("pano-copy-btn");
+
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = "✓ Скопировано";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "Скопировать результат";
+      btn.classList.remove("copied");
+    }, 2000);
+  }).catch(() => {
+    // Fallback: prompt with text
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;left:-9999px;";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand("copy");
+      btn.textContent = "✓ Скопировано";
+      btn.classList.add("copied");
+      setTimeout(() => {
+        btn.textContent = "Скопировать результат";
+        btn.classList.remove("copied");
+      }, 2000);
+    } catch (_) {
+      btn.textContent = "Не удалось скопировать";
+      setTimeout(() => { btn.textContent = "Скопировать результат"; }, 2000);
+    }
+    document.body.removeChild(ta);
+  });
+}
+
+// ============ GLOBAL DISPATCH ============
+
 function handleCalculateAction() {
   const activePanel = document.querySelector(".tab-panel.active")?.id;
   if (activePanel === "tab-calories") calculateCalories();
   else if (activePanel === "tab-running") calculateRunning();
+  else if (activePanel === "tab-pano") calculatePano();
 }
 
 function initTelegram() {
@@ -440,9 +691,9 @@ function initTelegram() {
 
 function initApp() {
   tabButtons.forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
-  document.querySelectorAll(".macro-slicer:not([data-run-mode])").forEach(btn => {
+  document.querySelectorAll(".macro-slicer:not([data-run-mode]):not([data-pano-mode]):not([data-test-input])").forEach(btn => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".macro-slicer:not([data-run-mode])").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".macro-slicer:not([data-run-mode]):not([data-pano-mode]):not([data-test-input])").forEach(b => b.classList.remove("active"));
       document.querySelectorAll(".macro-panel").forEach(p => p.classList.remove("active"));
       btn.classList.add("active");
       document.getElementById(`macro-panel-${btn.dataset.macroTab}`).classList.add("active");
@@ -450,6 +701,7 @@ function initApp() {
   });
 
   bindRunningSlicers();
+  bindPanoSlicers();
 
   document.querySelectorAll("form").forEach(f => {
     f.addEventListener("submit", e => {

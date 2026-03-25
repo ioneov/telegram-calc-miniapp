@@ -19,12 +19,15 @@ body { font-family: "Inter", sans-serif; background-color: var(--bg); color: var
 .tab-item { background: none; border: none; cursor: pointer; }
 .tab-icon-card { width: 72px; height: 72px; background: var(--card); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); transition: all 0.3s ease; }
 .tab-icon-card img { width: 32px; height: 32px; filter: grayscale(1) opacity(0.4); }
+.tab-icon-card svg { width: 32px; height: 32px; stroke: #8e8e93; opacity: 0.5; transition: all 0.3s ease; }
 .tab-item.active .tab-icon-card { background: var(--accent); transform: translateY(-2px); }
 .tab-item.active .tab-icon-card img { filter: brightness(0) invert(1) opacity(1); }
+.tab-item.active .tab-icon-card svg { stroke: #fff; opacity: 1; }
 
 /* Cards & Forms */
 .form-side, .result-banner, .macros-card { background: var(--card); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; border: none; }
 .field-label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; }
+.field-hint { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; }
 
 input, select { width: 100%; padding: 14px; border: 1px solid #efeff4; background: #f9f9fb; border-radius: 14px; font-size: 16px; font-family: inherit; outline: none; transition: border-color 0.2s ease, background-color 0.2s ease; }
 input:focus, select:focus { border-color: var(--accent); }
@@ -34,6 +37,7 @@ input:focus, select:focus { border-color: var(--accent); }
 .full-width { grid-column: 1 / -1; }
 .mb-16 { margin-bottom: 16px; }
 .mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
 
 /* Results */
 .result-banner { background: var(--text); color: #fff; }
@@ -127,11 +131,170 @@ input:focus, select:focus { border-color: var(--accent); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ==================== PANO MODULE ==================== */
+
+/* Hint toggle */
+.pano-hint-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: #f2f2f7;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: background 0.2s ease;
+}
+.pano-hint-toggle:active { background: #e5e5ea; }
+.pano-hint-toggle svg { transition: transform 0.2s ease; }
+.pano-hint-toggle.expanded svg { transform: rotate(180deg); }
+
+.pano-hint-body {
+  background: #f9f9fb;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 8px;
+  animation: fadeIn 0.25s ease;
+}
+.pano-hint-body p {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #48484a;
+}
+.pano-hint-body strong {
+  color: var(--text);
+}
+
+/* Zone tables */
+.zone-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.zone-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.zone-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f2;
+}
+.zone-row:last-child { border-bottom: none; }
+
+.zone-badge {
+  min-width: 38px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.zone-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.zone-range {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: "Geologica", sans-serif;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Pace zone rows (different layout: stacked) */
+.pace-zone-row {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f2;
+}
+.pace-zone-row:last-child { border-bottom: none; }
+
+.pace-zone-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pace-zone-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pace-zone-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pace-zone-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pace-zone-range {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: "Geologica", sans-serif;
+  white-space: nowrap;
+}
+
+.pace-zone-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+  padding-left: 18px;
+}
+
+/* Action button (copy) */
+.action-btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 16px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+  margin-bottom: 16px;
+}
+.action-btn:active { opacity: 0.8; transform: scale(0.98); }
+.action-btn.copied { background: #34c759; }
+
+/* ==================== RESPONSIVE ==================== */
+
 @media (max-width: 420px) {
   .app-shell { padding: 12px 12px 110px; }
   .tab-icon-card { width: 64px; height: 64px; }
   .tab-icon-card img { width: 28px; height: 28px; }
+  .tab-icon-card svg { width: 28px; height: 28px; }
   .predict-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .predict-item { padding: 6px 2px; }
   .chip { padding: 8px 12px; font-size: 13px; }
+  .modern-tabs { gap: 10px; }
 }
