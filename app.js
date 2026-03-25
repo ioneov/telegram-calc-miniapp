@@ -56,6 +56,12 @@ function scrollToElement(id) {
   }
 }
 
+function parsePositiveNumber(value) {
+  const normalized = String(value ?? "").trim().replace(",", ".");
+  const num = Number(normalized);
+  return Number.isFinite(num) && num > 0 ? num : 0;
+}
+
 function getFieldValue(id) {
   return document.getElementById(id)?.value?.trim() ?? "";
 }
@@ -198,9 +204,9 @@ function readCustomDistance(kmId, metersId) {
 function validateSelectValue(id, allowedValues, message) {
   const value = document.getElementById(id)?.value;
   if (!allowedValues.includes(value)) {
-    return { error: { message, fields: [id] } };
+    return { message, fields: [id] };
   }
-  return { value };
+  return null;
 }
 
 // ============ SHARED FORMAT UTILS ============
@@ -225,13 +231,6 @@ function formatTime(totalSeconds) {
   if (s === 60) { m += 1; s = 0; }
   if (m === 60) { h += 1; m = 0; }
   return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
-}
-
-function formatTimeMinsOnly(totalSeconds) {
-  let m = Math.floor(totalSeconds / 60);
-  let s = Math.round(totalSeconds % 60);
-  if (s === 60) { m += 1; s = 0; }
-  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 function parsePaceInput(minId, secId) {
@@ -268,9 +267,10 @@ function parsePaceInput(minId, secId) {
   setFieldValue(minId, m || "");
   setFieldValue(secId, s || "");
 
-  return { min: m, sec: s, total: m * 60 + s, empty: false };
+  return { min: m, sec: s, total: m * 60 + s };
 }
 
+/** Generic clipboard copy with fallback */
 function copyToClipboard(text, btn, defaultLabel) {
   const onSuccess = () => {
     btn.textContent = "✓ Скопировано";
@@ -311,11 +311,11 @@ function syncMainButton() {
 // ============ CALORIES LOGIC ============
 
 function validateCaloriesForm() {
-  const sexRes = validateSelectValue("sex", ["male", "female"], "Недопустимое значение поля «Пол»");
-  if (sexRes.error) return sexRes;
+  const sexError = validateSelectValue("sex", ["male", "female"], "Недопустимое значение поля «Пол»");
+  if (sexError) return sexError;
 
-  const activityRes = validateSelectValue("activity", ["1.2", "1.375", "1.55", "1.725", "1.9"], "Недопустимое значение поля «Активность»");
-  if (activityRes.error) return activityRes;
+  const activityError = validateSelectValue("activity", ["1.2", "1.375", "1.55", "1.725", "1.9"], "Недопустимое значение поля «Активность»");
+  if (activityError) return activityError;
 
   const ageRes = readNumberField("age", {
     required: true,
@@ -327,7 +327,7 @@ function validateCaloriesForm() {
     integerMessage: "Возраст должен быть целым числом",
     rangeMessage: "Возраст: 18–100 лет"
   });
-  if (ageRes.error) return ageRes;
+  if (ageRes.error) return ageRes.error;
 
   const heightRes = readNumberField("height", {
     required: true,
@@ -339,7 +339,7 @@ function validateCaloriesForm() {
     integerMessage: "Рост должен быть целым числом",
     rangeMessage: "Рост: 100–250 см"
   });
-  if (heightRes.error) return heightRes;
+  if (heightRes.error) return heightRes.error;
 
   const weightRes = readNumberField("weight", {
     required: true,
@@ -349,7 +349,7 @@ function validateCaloriesForm() {
     requiredMessage: "Заполните поле «Вес»",
     rangeMessage: "Вес: 30–300 кг"
   });
-  if (weightRes.error) return weightRes;
+  if (weightRes.error) return weightRes.error;
 
   const age = ageRes.value;
   const height = heightRes.value;
@@ -358,32 +358,34 @@ function validateCaloriesForm() {
   const bmi = weight / (heightM * heightM);
 
   if (bmi < 10 || bmi > 80) {
-    return { error: { message: `Нереалистичное соотношение роста и веса (ИМТ ${bmi.toFixed(1)})`, fields: ["height", "weight"] } };
+    return { message: `Нереалистичное соотношение роста и веса (ИМТ ${bmi.toFixed(1)})`, fields: ["height", "weight"] };
   }
 
-  return {
-    data: { sex: sexRes.value, activity: Number(activityRes.value), age, height, weight }
-  };
+  return null;
 }
 
 function calculateCalories() {
   clearErrors();
-  const { error, data } = validateCaloriesForm();
-  if (error) return showError("error-box", "error-text", error);
+  const errorObj = validateCaloriesForm();
+  if (errorObj) return showError("error-box", "error-text", errorObj);
 
-  let bmr = 10 * data.weight + 6.25 * data.height - 5 * data.age;
-  bmr = data.sex === "male" ? bmr + 5 : bmr - 161;
-  
-  if (bmr <= 0) return showError("error-box", "error-text", { message: "BMR отрицательный – проверьте данные", fields: ["age", "height", "weight"] });
+  const sex = document.getElementById("sex").value;
+  const age = parsePositiveNumber(document.getElementById("age").value);
+  const height = parsePositiveNumber(document.getElementById("height").value);
+  const weight = parsePositiveNumber(document.getElementById("weight").value);
+  const activity = Number(document.getElementById("activity").value);
 
-  const maintain = Math.round(bmr * data.activity);
-  
+  let bmr = 10 * weight + 6.25 * height - 5 * age;
+  bmr = sex === "male" ? bmr + 5 : bmr - 161;
+  if (bmr <= 0) return showError("error-box", "error-text", { message: "BMR отрицательный — проверьте данные", fields: ["age", "height", "weight"] });
+
+  const maintain = Math.round(bmr * activity);
   document.getElementById("bmr-value").textContent = String(Math.round(bmr));
   document.getElementById("maintain-value").textContent = String(maintain);
   document.getElementById("cut-value").textContent = String(Math.round(maintain * 0.85));
   document.getElementById("bulk-value").textContent = String(Math.round(maintain * 1.15));
 
-  updateMacros(maintain, data.weight);
+  updateMacros(maintain, weight);
   triggerUpdateAnimation("#result .m-value, .macro-panel.active strong");
   scrollToElement("result");
 }
@@ -395,7 +397,6 @@ function updateMacros(maintainKcal, weight) {
     bulk: { kcal: Math.round(maintainKcal * 1.15), p: 1.8, f: 1.0 }
   };
   let hasLowCarb = false;
-  
   Object.keys(goals).forEach(key => {
     const p = Math.round(weight * goals[key].p);
     const f = Math.round(weight * goals[key].f);
@@ -403,9 +404,7 @@ function updateMacros(maintainKcal, weight) {
     const c = Math.round(Math.max(0, goals[key].kcal - (pKcal + fKcal)) / 4);
     const cKcal = c * 4;
     const t = pKcal + fKcal + cKcal;
-    
     if (c < 50) hasLowCarb = true;
-    
     document.getElementById(`${key}-protein`).textContent = `${p} г`;
     document.getElementById(`${key}-fat`).textContent = `${f} г`;
     document.getElementById(`${key}-carbs`).textContent = `${c} г`;
@@ -413,7 +412,6 @@ function updateMacros(maintainKcal, weight) {
     document.getElementById(`${key}-f-details`).innerHTML = `${t>0?Math.round(fKcal/t*100):0}% &bull; ${fKcal} ккал`;
     document.getElementById(`${key}-c-details`).innerHTML = `${t>0?Math.round(cKcal/t*100):0}% &bull; ${cKcal} ккал`;
   });
-  
   document.getElementById("macros-warning").classList.toggle("hidden", !hasLowCarb);
 }
 
@@ -456,7 +454,6 @@ function bindRunningSlicers() {
   const convSpeed = document.getElementById("conv-speed");
   const onPaceInput = () => { lastEditedConvSource = "pace"; handleAutoCalcConv(); };
   const onSpeedInput = () => { lastEditedConvSource = "speed"; handleAutoCalcConv(); };
-  
   convPaceMin.addEventListener("input", onPaceInput);
   convPaceSec.addEventListener("input", onPaceInput);
   convSpeed.addEventListener("input", onSpeedInput);
@@ -534,7 +531,6 @@ function calcFact() {
     { id: "pred-10k", lossId: "wloss-10k", gainId: "wgain-10k", km: 10 },
     { id: "pred-21k", lossId: "wloss-21k", gainId: "wgain-21k", km: 21.0975 }
   ];
-  
   predDistances.forEach(d => {
     document.getElementById(d.id).textContent = formatTime(predictTime(vdot, d.km * 1000) * 60);
   });
@@ -674,128 +670,10 @@ function calculateRunning() {
   if (activeRunMode === "fact") calcFact();
   else if (activeRunMode === "target") calcTarget();
   else if (activeRunMode === "conv") calcConv(false);
-  
   if (document.getElementById("running-error-box").classList.contains("hidden")) {
     triggerUpdateAnimation(".running-res .m-value");
     scrollToElement("running-result");
   }
-}
-
-// ============ REALISM MODULE ============
-
-function calculateRealism() {
-  clearErrors();
-
-  const curDistRes = validateSelectValue("realism-cur-dist", ["5", "10", "21.0975", "42.195"], "Ошибка выбора текущей дистанции");
-  if (curDistRes.error) return showError("realism-error-box", "realism-error-text", curDistRes.error);
-  const curDist = parseFloat(curDistRes.value);
-
-  const curTime = readTimeFields({ hoursId: "realism-cur-h", minutesId: "realism-cur-m", secondsId: "realism-cur-s" });
-  if (curTime.error) return showError("realism-error-box", "realism-error-text", curTime.error);
-  if (curTime.totalSeconds <= 0) return showError("realism-error-box", "realism-error-text", { message: "Укажите время текущего результата", fields: ["realism-cur-h", "realism-cur-m", "realism-cur-s"] });
-
-  const tgtDistRes = validateSelectValue("realism-tgt-dist", ["5", "10", "21.0975", "42.195"], "Ошибка выбора целевой дистанции");
-  if (tgtDistRes.error) return showError("realism-error-box", "realism-error-text", tgtDistRes.error);
-  const tgtDist = parseFloat(tgtDistRes.value);
-
-  const tgtTime = readTimeFields({ hoursId: "realism-tgt-h", minutesId: "realism-tgt-m", secondsId: "realism-tgt-s" });
-  if (tgtTime.error) return showError("realism-error-box", "realism-error-text", tgtTime.error);
-  if (tgtTime.totalSeconds <= 0) return showError("realism-error-box", "realism-error-text", { message: "Укажите целевое время", fields: ["realism-tgt-h", "realism-tgt-m", "realism-tgt-s"] });
-
-  const weeksRes = readNumberField("realism-weeks", { required: true, integer: true, min: 1, max: 104, label: "Недель до старта", requiredMessage: "Укажите сколько недель до старта" });
-  if (weeksRes.error) return showError("realism-error-box", "realism-error-text", weeksRes.error);
-  const weeks = weeksRes.value;
-
-  let vol = null;
-  if (hasFieldValue("realism-vol")) {
-    const volRes = readNumberField("realism-vol", { integer: true, min: 1, max: 300, label: "Объем (км/нед)" });
-    if (volRes.error) return showError("realism-error-box", "realism-error-text", volRes.error);
-    vol = volRes.value;
-  }
-
-  // Математика Riegel
-  const predSec = curTime.totalSeconds * Math.pow(tgtDist / curDist, 1.06);
-  const gapSec = predSec - tgtTime.totalSeconds; // положительное значит надо улучшить
-  const impPct = gapSec > 0 ? (gapSec / predSec) * 100 : 0;
-  
-  const tgtPaceSec = tgtTime.totalSeconds / tgtDist;
-  const predPaceSec = predSec / tgtDist;
-  const paceGapSec = predPaceSec - tgtPaceSec;
-
-  // Эвристика реалистичности
-  let level = 0; 
-  if (impPct <= 1.5) level = 0;
-  else if (impPct <= 4.5) level = 1;
-  else if (impPct <= 7.5) level = 2;
-  else level = 3;
-
-  // Корректировка по неделям
-  if (weeks < 4 && level > 0 && level < 3) level++;
-  if (weeks >= 12 && level === 3 && impPct <= 10) level--;
-
-  const statuses = [
-    { text: "Реалистично уже сейчас", bg: "#B5E6A3", color: "#2d5a1e" },
-    { text: "Достижимо при хорошей подготовке", bg: "#A0D4F5", color: "#12425e" },
-    { text: "Агрессивная цель", bg: "#FFE08A", color: "#6b5900" },
-    { text: "Пока нереалистично", bg: "#FFB89A", color: "#7a2e0e" }
-  ];
-  
-  const status = statuses[level];
-
-  // DOM Updates
-  const badge = document.getElementById("realism-badge");
-  badge.textContent = status.text;
-  badge.style.background = status.bg;
-  badge.style.color = status.color;
-
-  document.getElementById("realism-pred-time").textContent = formatTime(predSec);
-  document.getElementById("realism-tgt-pace").textContent = formatPace(tgtPaceSec);
-
-  // Формирование текстового вывода
-  const tgtDistText = tgtDist === 21.0975 ? "полумарафон" : tgtDist === 42.195 ? "марафон" : `${tgtDist} км`;
-  let interpretationHTML = `<p>Сейчас ваша форма на <strong>${tgtDistText}</strong> эквивалентна результату около <strong>${formatTime(predSec)}</strong>.</p>`;
-
-  if (gapSec > 0) {
-    interpretationHTML += `<p style="margin-top:8px;">Ваша цель <strong>${formatTime(tgtTime.totalSeconds)}</strong> требует улучшения времени на <strong>${formatTime(gapSec)}</strong> (~${impPct.toFixed(1)}%).<br>Это означает, что вам нужно бежать быстрее на <strong>${Math.round(paceGapSec)} сек/км</strong>.</p>`;
-    
-    if (level === 0) {
-      interpretationHTML += `<p style="margin-top:8px;">Цель выглядит очень надежно с учетом запаса времени.</p>`;
-    } else if (level === 1) {
-      interpretationHTML += `<p style="margin-top:8px;">Горизонт в ${weeks} нед. позволяет выйти на нужную форму при системных тренировках${vol ? ` и поддержании объема около ${vol} км/нед` : ''}.</p>`;
-    } else if (level === 2) {
-      interpretationHTML += `<p style="margin-top:8px;">Это амбициозный прыжок. За ${weeks} нед. улучшить форму на ${impPct.toFixed(1)}% будет сложно. Фокусируйтесь на развивающих работах и восстановлении.</p>`;
-    } else {
-      interpretationHTML += `<p style="margin-top:8px;">Для срока в ${weeks} нед. такое улучшение (${impPct.toFixed(1)}%) статистически маловероятно. Рекомендуем разбить цель на этапы и пока сфокусироваться на более доступном результате.</p>`;
-    }
-  } else {
-    interpretationHTML += `<p style="margin-top:8px;">Текущая форма <strong>уже позволяет</strong> рассчитывать на целевое время или даже улучшить его. Главное — правильная подводка и раскладка по дистанции.</p>`;
-  }
-
-  document.getElementById("realism-interpretation").innerHTML = interpretationHTML;
-
-  // Таблица ориентиров (Milestones)
-  const distances = [
-    { label: "5 км", val: 5 },
-    { label: "10 км", val: 10 },
-    { label: "Полумарафон", val: 21.0975 }
-  ];
-
-  const milestonesHTML = distances.map(d => {
-    // Обратный Riegel: T_dist = T_tgt * (D_dist / D_tgt)^1.06
-    const msSec = tgtTime.totalSeconds * Math.pow(d.val / tgtDist, 1.06);
-    return `
-      <div class="zone-row">
-        <span class="zone-label" style="padding-left: 8px;">${d.label}</span>
-        <span class="zone-range">${formatTime(msSec)}</span>
-      </div>
-    `;
-  }).join("");
-
-  document.getElementById("realism-milestones-table").innerHTML = milestonesHTML;
-  document.getElementById("realism-result").classList.remove("hidden");
-
-  triggerUpdateAnimation("#realism-result .m-value, .realism-badge");
-  scrollToElement("realism-result");
 }
 
 // ============ PANO MODULE ============
@@ -816,7 +694,6 @@ function bindPanoSlicers() {
       clearErrors();
     });
   });
-  
   document.querySelectorAll(".macro-slicer[data-test-input]").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".macro-slicer[data-test-input]").forEach(b => b.classList.remove("active"));
@@ -826,13 +703,11 @@ function bindPanoSlicers() {
       document.getElementById("test-pace-input").classList.toggle("hidden", activeTestInput !== "pace");
     });
   });
-  
   const hintBtn = document.getElementById("pano-hint-btn");
   const hintBody = document.getElementById("pano-hint-body");
   if (hintBtn && hintBody) {
     hintBtn.addEventListener("click", () => { hintBody.classList.toggle("hidden"); hintBtn.classList.toggle("expanded"); });
   }
-  
   document.getElementById("pano-copy-btn")?.addEventListener("click", () => {
     copyToClipboard(buildPanoResultText(), document.getElementById("pano-copy-btn"), "Скопировать результат");
   });
@@ -846,10 +721,6 @@ function calculatePano() {
   if (activePanoMode === "direct") {
     const pace = parsePaceInput("pano-pace-min", "pano-pace-sec");
     if (pace.error) return showError("pano-error-box", "pano-error-text", pace.error);
-    
-    if (pace.empty) {
-      return showError("pano-error-box", "pano-error-text", { message: "Укажите пороговый темп", fields: ["pano-pace-min", "pano-pace-sec"] });
-    }
 
     thresholdPaceSec = pace.total;
     const hrRes = readNumberField("pano-hr", {
@@ -865,6 +736,9 @@ function calculatePano() {
     if (hrRes.error) return showError("pano-error-box", "pano-error-text", hrRes.error);
     lthr = hrRes.value;
 
+    if (thresholdPaceSec <= 0) {
+      return showError("pano-error-box", "pano-error-text", { message: "Укажите пороговый темп", fields: ["pano-pace-min", "pano-pace-sec"] });
+    }
     if (thresholdPaceSec < PANO_MIN_PACE || thresholdPaceSec > PANO_MAX_PACE) {
       return showError("pano-error-box", "pano-error-text", { message: "Темп: 1:30 – 15:00 мин/км", fields: ["pano-pace-min", "pano-pace-sec"] });
     }
@@ -883,11 +757,10 @@ function calculatePano() {
     } else {
       const pace = parsePaceInput("test-pace-min", "test-pace-sec");
       if (pace.error) return showError("pano-error-box", "pano-error-text", pace.error);
-      
-      if (pace.empty) {
+      thresholdPaceSec = pace.total;
+      if (thresholdPaceSec <= 0) {
         return showError("pano-error-box", "pano-error-text", { message: "Укажите средний темп", fields: ["test-pace-min", "test-pace-sec"] });
       }
-      thresholdPaceSec = pace.total;
     }
 
     if (thresholdPaceSec < PANO_MIN_PACE || thresholdPaceSec > PANO_MAX_PACE) {
@@ -915,15 +788,12 @@ function renderPanoResults(paceSec, lthr) {
   document.getElementById("pano-res-pace").textContent = formatPace(paceSec);
   document.getElementById("pano-res-speed").textContent = (3600 / paceSec).toFixed(2);
   document.getElementById("pano-res-hr").textContent = String(lthr);
-  
   renderHRZones(lthr);
   renderPaceZones(paceSec);
-  
   document.getElementById("pano-result").classList.remove("hidden");
   document.getElementById("pano-hr-zones").classList.remove("hidden");
   document.getElementById("pano-pace-zones").classList.remove("hidden");
   document.getElementById("pano-copy-btn").classList.remove("hidden");
-  
   triggerUpdateAnimation("#pano-result .m-value");
   scrollToElement("pano-result");
 }
@@ -965,11 +835,11 @@ function buildPanoResultText() {
   const hr = document.getElementById("pano-res-hr").textContent;
   let t = `🏃 ПАНО\n\nТемп: ${pace} мин/км\nСкорость: ${speed} км/ч\nПульс: ${hr} уд/мин\n\n❤️ Пульсовые зоны\n`;
   document.querySelectorAll("#pano-hr-zones-table .zone-row").forEach(r => {
-    t += `${r.querySelector(".zone-badge").textContent}: ${r.querySelector(".zone-range").textContent} – ${r.querySelector(".zone-label").textContent}\n`;
+    t += `${r.querySelector(".zone-badge").textContent}: ${r.querySelector(".zone-range").textContent} — ${r.querySelector(".zone-label").textContent}\n`;
   });
   t += `\n👟 Темповые зоны\n`;
   document.querySelectorAll("#pano-pace-zones-table .pace-zone-row").forEach(r => {
-    t += `${r.querySelector(".pace-zone-title").textContent}: ${r.querySelector(".pace-zone-range").textContent} – ${r.querySelector(".pace-zone-desc").textContent}\n`;
+    t += `${r.querySelector(".pace-zone-title").textContent}: ${r.querySelector(".pace-zone-range").textContent} — ${r.querySelector(".pace-zone-desc").textContent}\n`;
   });
   return t;
 }
@@ -1070,7 +940,6 @@ function calculateFuel() {
       integer: true,
       min: 200,
       max: 3000,
-      allowZero: true,
       label: "Потоотделение",
       integerMessage: "Потоотделение должно быть целым числом",
       rangeMessage: "Потоотделение: 200–3000 мл/час"
@@ -1106,6 +975,7 @@ function calculateFuel() {
 }
 
 function renderFuelResults(p) {
+  // Summary card
   let summaryNotes = "";
   if (p.durationMin <= 60 && p.intensity === "high") {
     summaryNotes = `<div class="fuel-note">При нагрузке до 60 мин можно обойтись <strong>полосканием рта</strong> углеводным напитком (mouth rinse) или небольшим количеством геля.</div>`;
@@ -1113,7 +983,7 @@ function renderFuelResults(p) {
   if (p.durationMin > 180) {
     summaryNotes += `<div class="fuel-note">Верхние значения (80–90 г/ч) актуальны для <strong>тренированного ЖКТ</strong>. Увеличивайте постепенно.</div>`;
   }
-  if (p.fluid.fromSweat && p.fluid.sweatRate > 0) {
+  if (p.fluid.fromSweat) {
     summaryNotes += `<div class="fuel-note">Потери: ~${p.fluid.sweatRate} мл/ч. Рекомендуется восполнять <strong>60–80%</strong> потерь. Не пейте больше, чем теряете.</div>`;
   }
 
@@ -1138,9 +1008,9 @@ function renderFuelResults(p) {
     </div>
     ${summaryNotes}`;
 
-  const carbsEvery = Math.round(p.carbsMid / (60 / 25)); 
-  const fluidEvery = Math.round(p.fluidMid / (60 / 17)); 
-  
+  // Timeline
+  const carbsEvery = Math.round(p.carbsMid / (60 / 25));  // ~every 25 min
+  const fluidEvery = Math.round(p.fluidMid / (60 / 17));  // ~every 17 min
   document.getElementById("fuel-timeline").innerHTML = `
     <h3 class="fuel-section-title">План по ходу нагрузки</h3>
     <div class="fuel-plan-row">
@@ -1165,6 +1035,7 @@ function renderFuelResults(p) {
       </div>
     </div>`;
 
+  // Gear
   document.getElementById("fuel-gear").innerHTML = `
     <h3 class="fuel-section-title">Что взять с собой</h3>
     <div class="fuel-gear-grid">
@@ -1174,11 +1045,11 @@ function renderFuelResults(p) {
       <div class="fuel-gear-item"><div class="fuel-gear-val">${p.totalSodium} мг</div><div class="fuel-gear-label">натрия всего</div></div>
     </div>`;
 
+  // Pre/Post
   const preCarbsLo = Math.round(weightToNum(p.weightKg) * 1);
   const preCarbsHi = Math.round(weightToNum(p.weightKg) * 4);
   const postCarbsLo = Math.round(weightToNum(p.weightKg) * 1.0);
   const postCarbsHi = Math.round(weightToNum(p.weightKg) * 1.2);
-  
   document.getElementById("fuel-pre-post").innerHTML = `
     <div class="fuel-tip-block">
       <div class="fuel-tip-title">⏱ Перед стартом (1–4 ч)</div>
@@ -1191,7 +1062,6 @@ function renderFuelResults(p) {
 
   document.getElementById("fuel-results-wrap").classList.remove("hidden");
   document.getElementById("fuel-copy-btn").classList.remove("hidden");
-  
   triggerUpdateAnimation("#fuel-summary .fuel-hero-val");
   scrollToElement("fuel-summary");
 }
@@ -1213,12 +1083,14 @@ function buildFuelResultText() {
 
   let text = "🔋 Fueling & Hydration\n\n";
 
+  // Hero values
   const heroItems = s.querySelectorAll(".fuel-hero-item");
   heroItems.forEach(item => {
     text += `${item.querySelector(".fuel-hero-label").textContent}: ${item.querySelector(".fuel-hero-val").textContent} ${item.querySelector(".fuel-hero-unit").textContent}\n`;
   });
   text += "\n";
 
+  // Plan
   text += "📋 План\n";
   t.querySelectorAll(".fuel-plan-row").forEach(row => {
     text += `${row.querySelector(".fuel-plan-title").textContent}\n`;
@@ -1226,11 +1098,13 @@ function buildFuelResultText() {
   });
   text += "\n";
 
+  // Gear
   text += "🎒 С собой\n";
   g.querySelectorAll(".fuel-gear-item").forEach(item => {
-    text += `${item.querySelector(".fuel-gear-val").textContent} – ${item.querySelector(".fuel-gear-label").textContent}\n`;
+    text += `${item.querySelector(".fuel-gear-val").textContent} — ${item.querySelector(".fuel-gear-label").textContent}\n`;
   });
 
+  // Pre/post
   const tips = document.querySelectorAll("#fuel-pre-post .fuel-tip-block");
   if (tips.length) {
     text += "\n";
@@ -1250,7 +1124,6 @@ function handleCalculateAction() {
   if (activePanel === "tab-calories") calculateCalories();
   else if (activePanel === "tab-running") calculateRunning();
   else if (activePanel === "tab-pano") calculatePano();
-  else if (activePanel === "tab-realism") calculateRealism();
   else if (activePanel === "tab-fuel") calculateFuel();
 }
 
@@ -1267,6 +1140,7 @@ function initTelegram() {
 function initApp() {
   tabButtons.forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
 
+  // Calorie macro slicers (exclude all other data-* slicers)
   document.querySelectorAll(".macro-slicer:not([data-run-mode]):not([data-pano-mode]):not([data-test-input])").forEach(btn => {
     if (!btn.dataset.macroTab) return;
     btn.addEventListener("click", () => {
