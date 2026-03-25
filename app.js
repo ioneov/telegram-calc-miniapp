@@ -367,7 +367,7 @@ function calculateCalories() {
   let bmr = 10 * data.weight + 6.25 * data.height - 5 * data.age;
   bmr = data.sex === "male" ? bmr + 5 : bmr - 161;
   
-  if (bmr <= 0) return showError("error-box", "error-text", { message: "BMR отрицательный — проверьте данные", fields: ["age", "height", "weight"] });
+  if (bmr <= 0) return showError("error-box", "error-text", { message: "BMR отрицательный – проверьте данные", fields: ["age", "height", "weight"] });
 
   const maintain = Math.round(bmr * data.activity);
   
@@ -841,11 +841,11 @@ function buildPanoResultText() {
   const hr = document.getElementById("pano-res-hr").textContent;
   let t = `🏃 ПАНО\n\nТемп: ${pace} мин/км\nСкорость: ${speed} км/ч\nПульс: ${hr} уд/мин\n\n❤️ Пульсовые зоны\n`;
   document.querySelectorAll("#pano-hr-zones-table .zone-row").forEach(r => {
-    t += `${r.querySelector(".zone-badge").textContent}: ${r.querySelector(".zone-range").textContent} — ${r.querySelector(".zone-label").textContent}\n`;
+    t += `${r.querySelector(".zone-badge").textContent}: ${r.querySelector(".zone-range").textContent} – ${r.querySelector(".zone-label").textContent}\n`;
   });
   t += `\n👟 Темповые зоны\n`;
   document.querySelectorAll("#pano-pace-zones-table .pace-zone-row").forEach(r => {
-    t += `${r.querySelector(".pace-zone-title").textContent}: ${r.querySelector(".pace-zone-range").textContent} — ${r.querySelector(".pace-zone-desc").textContent}\n`;
+    t += `${r.querySelector(".pace-zone-title").textContent}: ${r.querySelector(".pace-zone-range").textContent} – ${r.querySelector(".pace-zone-desc").textContent}\n`;
   });
   return t;
 }
@@ -1104,7 +1104,7 @@ function buildFuelResultText() {
 
   text += "🎒 С собой\n";
   g.querySelectorAll(".fuel-gear-item").forEach(item => {
-    text += `${item.querySelector(".fuel-gear-val").textContent} — ${item.querySelector(".fuel-gear-label").textContent}\n`;
+    text += `${item.querySelector(".fuel-gear-val").textContent} – ${item.querySelector(".fuel-gear-label").textContent}\n`;
   });
 
   const tips = document.querySelectorAll("#fuel-pre-post .fuel-tip-block");
