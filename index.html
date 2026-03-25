@@ -20,13 +20,15 @@
     <nav class="modern-tabs">
       <button type="button" class="tab-item active" id="tab-calories-btn" data-tab="calories">
         <div class="tab-icon-card">
-          <img src="kkal-svg.svg" alt="Калории" />
+          <img src="kkal-svg.svg" alt="Калории" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+          <svg style="display:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         </div>
       </button>
 
       <button type="button" class="tab-item" id="tab-running-btn" data-tab="running">
         <div class="tab-icon-card">
-          <img src="run-svg.svg" alt="Бег" />
+          <img src="run-svg.svg" alt="Бег" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+          <svg style="display:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
       </button>
 
@@ -34,6 +36,16 @@
         <div class="tab-icon-card">
           <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 16h5l3-8 4 16 4-10 3 6h5"/>
+          </svg>
+        </div>
+      </button>
+
+      <button type="button" class="tab-item" id="tab-realism-btn" data-tab="realism">
+        <div class="tab-icon-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="6"></circle>
+            <circle cx="12" cy="12" r="2"></circle>
           </svg>
         </div>
       </button>
@@ -339,6 +351,96 @@
         <section id="pano-hr-zones" class="macros-card hidden"><h3 class="zone-section-title">Пульсовые зоны</h3><div id="pano-hr-zones-table" class="zone-table"></div></section>
         <section id="pano-pace-zones" class="macros-card hidden"><h3 class="zone-section-title">Темповые зоны</h3><div id="pano-pace-zones-table" class="zone-table"></div></section>
         <button type="button" id="pano-copy-btn" class="action-btn hidden">Скопировать результат</button>
+      </div>
+    </section>
+
+    <section id="tab-realism" class="tab-panel">
+      <div class="calc-card">
+        <section class="form-side">
+          <form id="realism-form" class="form-stack" novalidate>
+            <div class="run-input-group">
+              <span class="field-label">Контрольный результат (текущая форма)</span>
+              <div class="fields-grid" style="margin-top: 8px;">
+                <label>
+                  <select id="realism-cur-dist">
+                    <option value="5">5 км</option>
+                    <option value="10">10 км</option>
+                    <option value="21.0975">Полумарафон</option>
+                    <option value="42.195">Марафон</option>
+                  </select>
+                </label>
+              </div>
+              <div class="hms-grid mt-8">
+                <input id="realism-cur-h" type="number" autocomplete="off" inputmode="numeric" min="0" step="1" placeholder="0" /><span class="u">ч</span>
+                <input id="realism-cur-m" type="number" autocomplete="off" inputmode="numeric" min="0" max="59" step="1" placeholder="25" /><span class="u">м</span>
+                <input id="realism-cur-s" type="number" autocomplete="off" inputmode="numeric" min="0" max="59" step="1" placeholder="00" /><span class="u">с</span>
+              </div>
+            </div>
+            
+            <hr style="border:none; border-top: 1px solid #efeff4; margin: 20px 0;">
+            
+            <div class="run-input-group">
+              <span class="field-label">Цель</span>
+              <div class="fields-grid" style="margin-top: 8px;">
+                <label>
+                  <select id="realism-tgt-dist">
+                    <option value="5">5 км</option>
+                    <option value="10" selected>10 км</option>
+                    <option value="21.0975">Полумарафон</option>
+                    <option value="42.195">Марафон</option>
+                  </select>
+                </label>
+              </div>
+              <div class="hms-grid mt-8">
+                <input id="realism-tgt-h" type="number" autocomplete="off" inputmode="numeric" min="0" step="1" placeholder="0" /><span class="u">ч</span>
+                <input id="realism-tgt-m" type="number" autocomplete="off" inputmode="numeric" min="0" max="59" step="1" placeholder="49" /><span class="u">м</span>
+                <input id="realism-tgt-s" type="number" autocomplete="off" inputmode="numeric" min="0" max="59" step="1" placeholder="00" /><span class="u">с</span>
+              </div>
+            </div>
+            
+            <div class="fields-grid mt-12">
+              <label>
+                <span class="field-label">Недель до старта</span>
+                <input id="realism-weeks" type="number" autocomplete="off" inputmode="numeric" min="1" max="104" step="1" placeholder="8" />
+              </label>
+              <label>
+                <span class="field-label">Объем (км/нед)</span>
+                <input id="realism-vol" type="number" autocomplete="off" inputmode="numeric" min="1" max="300" step="1" placeholder="40" />
+                <span class="field-hint">Опционально</span>
+              </label>
+            </div>
+          </form>
+          <div id="realism-error-box" class="error-box hidden"><p id="realism-error-text"></p></div>
+        </section>
+
+        <section id="realism-result" class="hidden">
+          <div class="result-banner">
+            <div class="realism-badge-wrap">
+              <span id="realism-badge" class="realism-badge">-</span>
+            </div>
+            <div class="metrics-grid mt-12">
+              <div class="metric-item">
+                <span class="m-label">Прогноз (сейчас)</span>
+                <div class="m-val-wrap"><span class="m-value" id="realism-pred-time">-</span></div>
+              </div>
+              <div class="metric-item">
+                <span class="m-label">Целевой темп</span>
+                <div class="m-val-wrap"><span class="m-value" id="realism-tgt-pace">-</span> <span class="m-unit">/км</span></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="macros-card" style="margin-top: 16px;">
+            <div id="realism-interpretation" class="fuel-tip-text">
+              </div>
+          </div>
+          
+          <div class="macros-card" style="margin-top: 16px;">
+            <h3 class="zone-section-title">Ориентиры для вашей цели</h3>
+            <p class="field-hint mb-16">Примерные результаты, на которые нужно быть готовым для достижения целевого времени.</p>
+            <div id="realism-milestones-table" class="zone-table"></div>
+          </div>
+        </section>
       </div>
     </section>
 

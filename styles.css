@@ -15,11 +15,11 @@ body { font-family: "Inter", sans-serif; background-color: var(--bg); color: var
 .app-shell { max-width: 500px; margin: 0 auto; padding: 16px 16px 120px; }
 
 /* Tabs */
-.modern-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 24px; }
-.tab-item { background: none; border: none; cursor: pointer; }
-.tab-icon-card { width: 64px; height: 64px; background: var(--card); border-radius: 18px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); transition: all 0.3s ease; }
-.tab-icon-card img { width: 28px; height: 28px; filter: grayscale(1) opacity(0.4); }
-.tab-icon-card svg { width: 28px; height: 28px; stroke: #8e8e93; opacity: 0.5; transition: all 0.3s ease; }
+.modern-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 24px; }
+.tab-item { background: none; border: none; cursor: pointer; flex: 1; max-width: 72px; min-width: 56px; }
+.tab-icon-card { width: 100%; aspect-ratio: 1; max-height: 64px; background: var(--card); border-radius: 18px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); transition: all 0.3s ease; }
+.tab-icon-card img { width: 26px; height: 26px; filter: grayscale(1) opacity(0.4); }
+.tab-icon-card svg { width: 26px; height: 26px; stroke: #8e8e93; opacity: 0.5; transition: all 0.3s ease; }
 .tab-item.active .tab-icon-card { background: var(--accent); transform: translateY(-2px); }
 .tab-item.active .tab-icon-card img { filter: brightness(0) invert(1) opacity(1); }
 .tab-item.active .tab-icon-card svg { stroke: #fff; opacity: 1; }
@@ -27,7 +27,7 @@ body { font-family: "Inter", sans-serif; background-color: var(--bg); color: var
 /* Cards & Forms */
 .form-side, .result-banner, .macros-card { background: var(--card); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; border: none; }
 .field-label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; }
-.field-hint { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; }
+.field-hint { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
 
 input, select { width: 100%; padding: 14px; border: 1px solid #efeff4; background: #f9f9fb; border-radius: 14px; font-size: 16px; font-family: inherit; outline: none; transition: border-color 0.2s ease, background-color 0.2s ease; }
 input:focus, select:focus { border-color: var(--accent); }
@@ -184,14 +184,18 @@ input:focus, select:focus { border-color: var(--accent); }
 .fuel-tip-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
 .fuel-tip-text { font-size: 13px; color: #48484a; line-height: 1.5; }
 
+/* ==================== REALISM MODULE ==================== */
+
+.realism-badge-wrap { display: flex; }
+.realism-badge { display: inline-block; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+
 /* ==================== RESPONSIVE ==================== */
 
 @media (max-width: 420px) {
   .app-shell { padding: 12px 12px 110px; }
-  .modern-tabs { gap: 6px; }
-  .tab-icon-card { width: 56px; height: 56px; border-radius: 16px; }
-  .tab-icon-card img { width: 24px; height: 24px; }
-  .tab-icon-card svg { width: 24px; height: 24px; }
+  .modern-tabs { gap: 4px; }
+  .tab-icon-card { max-height: 56px; border-radius: 16px; }
+  .tab-icon-card img, .tab-icon-card svg { width: 22px; height: 22px; }
   .predict-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .predict-item { padding: 6px 2px; }
   .chip { padding: 8px 12px; font-size: 13px; }
