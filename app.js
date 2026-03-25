@@ -56,9 +56,151 @@ function scrollToElement(id) {
   }
 }
 
-function parsePositiveNumber(value) {
-  const num = Number(value);
-  return Number.isFinite(num) && num > 0 ? num : 0;
+function getFieldValue(id) {
+  return document.getElementById(id)?.value?.trim() ?? "";
+}
+
+function hasFieldValue(id) {
+  return getFieldValue(id) !== "";
+}
+
+function setFieldValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value;
+}
+
+function parseStrictNumber(value) {
+  const normalized = String(value ?? "").trim().replace(",", ".");
+  if (!normalized || !/^-?\d+(?:\.\d+)?$/.test(normalized)) return null;
+  const num = Number(normalized);
+  return Number.isFinite(num) ? num : null;
+}
+
+function readNumberField(id, {
+  required = false,
+  integer = false,
+  min = null,
+  max = null,
+  allowZero = false,
+  label = "Поле",
+  requiredMessage = null,
+  invalidMessage = null,
+  integerMessage = null,
+  rangeMessage = null
+} = {}) {
+  const raw = getFieldValue(id);
+
+  if (raw === "") {
+    if (!required) return { value: null, raw };
+    return { error: { message: requiredMessage || `Заполните поле «${label}»`, fields: [id] } };
+  }
+
+  const value = parseStrictNumber(raw);
+  if (value === null) {
+    return { error: { message: invalidMessage || `Поле «${label}» должно быть числом`, fields: [id] } };
+  }
+
+  if (integer && !Number.isInteger(value)) {
+    return { error: { message: integerMessage || `Поле «${label}» должно быть целым числом`, fields: [id] } };
+  }
+
+  if (allowZero ? value < 0 : value <= 0) {
+    return { error: { message: rangeMessage || `Поле «${label}» имеет недопустимое значение`, fields: [id] } };
+  }
+
+  if ((min !== null && value < min) || (max !== null && value > max)) {
+    return { error: { message: rangeMessage || `Поле «${label}» имеет недопустимое значение`, fields: [id] } };
+  }
+
+  return { value, raw };
+}
+
+function readTimeFields({ hoursId = null, minutesId = null, secondsId = null, maxHours = null } = {}) {
+  const hoursRes = hoursId ? readNumberField(hoursId, {
+    integer: true,
+    min: 0,
+    allowZero: true,
+    label: "Часы",
+    rangeMessage: maxHours !== null ? `Часы: 0–${maxHours}` : "Часы не могут быть отрицательными"
+  }) : { value: 0 };
+  if (hoursRes.error) return hoursRes;
+
+  const minutesRes = minutesId ? readNumberField(minutesId, {
+    integer: true,
+    min: 0,
+    allowZero: true,
+    label: "Минуты",
+    rangeMessage: "Минуты не могут быть отрицательными"
+  }) : { value: 0 };
+  if (minutesRes.error) return minutesRes;
+
+  const secondsRes = secondsId ? readNumberField(secondsId, {
+    integer: true,
+    min: 0,
+    allowZero: true,
+    label: "Секунды",
+    rangeMessage: "Секунды не могут быть отрицательными"
+  }) : { value: 0 };
+  if (secondsRes.error) return secondsRes;
+
+  let h = hoursRes.value ?? 0;
+  let m = minutesRes.value ?? 0;
+  let s = secondsRes.value ?? 0;
+
+  if (maxHours !== null && h > maxHours) {
+    return { error: { message: `Часы: 0–${maxHours}`, fields: [hoursId] } };
+  }
+
+  const normalized = normalizeTime(h, m, s);
+  if (hoursId) setFieldValue(hoursId, normalized.h || "");
+  if (minutesId) setFieldValue(minutesId, normalized.m || "");
+  if (secondsId) setFieldValue(secondsId, normalized.s || "");
+
+  return {
+    h: normalized.h,
+    m: normalized.m,
+    s: normalized.s,
+    totalSeconds: normalized.h * 3600 + normalized.m * 60 + normalized.s
+  };
+}
+
+function readCustomDistance(kmId, metersId) {
+  const kmRes = readNumberField(kmId, {
+    min: 0,
+    allowZero: true,
+    label: "Километры",
+    rangeMessage: "Километры не могут быть отрицательными"
+  });
+  if (kmRes.error) return kmRes;
+
+  const metersRes = readNumberField(metersId, {
+    integer: true,
+    min: 0,
+    allowZero: true,
+    label: "Метры",
+    rangeMessage: "Метры не могут быть отрицательными"
+  });
+  if (metersRes.error) return metersRes;
+
+  let km = kmRes.value ?? 0;
+  let mt = metersRes.value ?? 0;
+  if (mt >= 1000) {
+    km += Math.floor(mt / 1000);
+    mt = mt % 1000;
+  }
+
+  setFieldValue(kmId, km || "");
+  setFieldValue(metersId, mt || "");
+
+  return { km, meters: mt, totalKm: km + mt / 1000 };
+}
+
+function validateSelectValue(id, allowedValues, message) {
+  const value = document.getElementById(id)?.value;
+  if (!allowedValues.includes(value)) {
+    return { error: { message, fields: [id] } };
+  }
+  return { value };
 }
 
 // ============ SHARED FORMAT UTILS ============
@@ -86,13 +228,42 @@ function formatTime(totalSeconds) {
 }
 
 function parsePaceInput(minId, secId) {
-  let m = parsePositiveNumber(document.getElementById(minId).value);
-  let s = parsePositiveNumber(document.getElementById(secId).value);
-  if (s >= 60) { m += Math.floor(s / 60); s = s % 60; }
-  return { min: m, sec: s, total: m * 60 + s };
+  const minRes = readNumberField(minId, {
+    integer: true,
+    min: 0,
+    allowZero: true,
+    label: "Минуты",
+    rangeMessage: "Минуты не могут быть отрицательными"
+  });
+  if (minRes.error) return minRes;
+
+  const secRes = readNumberField(secId, {
+    integer: true,
+    min: 0,
+    allowZero: true,
+    label: "Секунды",
+    rangeMessage: "Секунды не могут быть отрицательными"
+  });
+  if (secRes.error) return secRes;
+
+  let m = minRes.value ?? 0;
+  let s = secRes.value ?? 0;
+
+  if (!hasFieldValue(minId) && !hasFieldValue(secId)) {
+    return { min: 0, sec: 0, total: 0, empty: true };
+  }
+
+  if (s >= 60) {
+    m += Math.floor(s / 60);
+    s = s % 60;
+  }
+
+  setFieldValue(minId, m || "");
+  setFieldValue(secId, s || "");
+
+  return { min: m, sec: s, total: m * 60 + s, empty: false };
 }
 
-/** Generic clipboard copy with fallback */
 function copyToClipboard(text, btn, defaultLabel) {
   const onSuccess = () => {
     btn.textContent = "✓ Скопировано";
@@ -133,46 +304,79 @@ function syncMainButton() {
 // ============ CALORIES LOGIC ============
 
 function validateCaloriesForm() {
-  const age = parsePositiveNumber(document.getElementById("age").value);
-  const height = parsePositiveNumber(document.getElementById("height").value);
-  const weight = parsePositiveNumber(document.getElementById("weight").value);
-  const fields = [];
-  if (!age) fields.push("age");
-  if (!height) fields.push("height");
-  if (!weight) fields.push("weight");
-  if (fields.length > 0) return { message: "Заполните все поля", fields };
-  if (!Number.isInteger(age)) return { message: "Возраст должен быть целым числом", fields: ["age"] };
-  if (age < 18 || age > 100) return { message: "Возраст: 18–100 лет", fields: ["age"] };
-  if (height < 100 || height > 250) return { message: "Рост: 100–250 см", fields: ["height"] };
-  if (weight < 30 || weight > 300) return { message: "Вес: 30–300 кг", fields: ["weight"] };
+  const sexRes = validateSelectValue("sex", ["male", "female"], "Недопустимое значение поля «Пол»");
+  if (sexRes.error) return sexRes;
+
+  const activityRes = validateSelectValue("activity", ["1.2", "1.375", "1.55", "1.725", "1.9"], "Недопустимое значение поля «Активность»");
+  if (activityRes.error) return activityRes;
+
+  const ageRes = readNumberField("age", {
+    required: true,
+    integer: true,
+    min: 18,
+    max: 100,
+    label: "Возраст",
+    requiredMessage: "Заполните поле «Возраст»",
+    integerMessage: "Возраст должен быть целым числом",
+    rangeMessage: "Возраст: 18–100 лет"
+  });
+  if (ageRes.error) return ageRes;
+
+  const heightRes = readNumberField("height", {
+    required: true,
+    integer: true,
+    min: 100,
+    max: 250,
+    label: "Рост",
+    requiredMessage: "Заполните поле «Рост»",
+    integerMessage: "Рост должен быть целым числом",
+    rangeMessage: "Рост: 100–250 см"
+  });
+  if (heightRes.error) return heightRes;
+
+  const weightRes = readNumberField("weight", {
+    required: true,
+    min: 30,
+    max: 300,
+    label: "Вес",
+    requiredMessage: "Заполните поле «Вес»",
+    rangeMessage: "Вес: 30–300 кг"
+  });
+  if (weightRes.error) return weightRes;
+
+  const age = ageRes.value;
+  const height = heightRes.value;
+  const weight = weightRes.value;
   const heightM = height / 100;
   const bmi = weight / (heightM * heightM);
-  if (bmi < 10 || bmi > 80) return { message: `Нереалистичное соотношение роста и веса (ИМТ ${bmi.toFixed(1)})`, fields: ["height", "weight"] };
-  return null;
+
+  if (bmi < 10 || bmi > 80) {
+    return { error: { message: `Нереалистичное соотношение роста и веса (ИМТ ${bmi.toFixed(1)})`, fields: ["height", "weight"] } };
+  }
+
+  return {
+    data: { sex: sexRes.value, activity: Number(activityRes.value), age, height, weight }
+  };
 }
 
 function calculateCalories() {
   clearErrors();
-  const errorObj = validateCaloriesForm();
-  if (errorObj) return showError("error-box", "error-text", errorObj);
+  const { error, data } = validateCaloriesForm();
+  if (error) return showError("error-box", "error-text", error);
 
-  const sex = document.getElementById("sex").value;
-  const age = parsePositiveNumber(document.getElementById("age").value);
-  const height = parsePositiveNumber(document.getElementById("height").value);
-  const weight = parsePositiveNumber(document.getElementById("weight").value);
-  const activity = Number(document.getElementById("activity").value);
-
-  let bmr = 10 * weight + 6.25 * height - 5 * age;
-  bmr = sex === "male" ? bmr + 5 : bmr - 161;
+  let bmr = 10 * data.weight + 6.25 * data.height - 5 * data.age;
+  bmr = data.sex === "male" ? bmr + 5 : bmr - 161;
+  
   if (bmr <= 0) return showError("error-box", "error-text", { message: "BMR отрицательный — проверьте данные", fields: ["age", "height", "weight"] });
 
-  const maintain = Math.round(bmr * activity);
+  const maintain = Math.round(bmr * data.activity);
+  
   document.getElementById("bmr-value").textContent = String(Math.round(bmr));
   document.getElementById("maintain-value").textContent = String(maintain);
   document.getElementById("cut-value").textContent = String(Math.round(maintain * 0.85));
   document.getElementById("bulk-value").textContent = String(Math.round(maintain * 1.15));
 
-  updateMacros(maintain, weight);
+  updateMacros(maintain, data.weight);
   triggerUpdateAnimation("#result .m-value, .macro-panel.active strong");
   scrollToElement("result");
 }
@@ -184,6 +388,7 @@ function updateMacros(maintainKcal, weight) {
     bulk: { kcal: Math.round(maintainKcal * 1.15), p: 1.8, f: 1.0 }
   };
   let hasLowCarb = false;
+  
   Object.keys(goals).forEach(key => {
     const p = Math.round(weight * goals[key].p);
     const f = Math.round(weight * goals[key].f);
@@ -191,7 +396,9 @@ function updateMacros(maintainKcal, weight) {
     const c = Math.round(Math.max(0, goals[key].kcal - (pKcal + fKcal)) / 4);
     const cKcal = c * 4;
     const t = pKcal + fKcal + cKcal;
+    
     if (c < 50) hasLowCarb = true;
+    
     document.getElementById(`${key}-protein`).textContent = `${p} г`;
     document.getElementById(`${key}-fat`).textContent = `${f} г`;
     document.getElementById(`${key}-carbs`).textContent = `${c} г`;
@@ -199,6 +406,7 @@ function updateMacros(maintainKcal, weight) {
     document.getElementById(`${key}-f-details`).innerHTML = `${t>0?Math.round(fKcal/t*100):0}% &bull; ${fKcal} ккал`;
     document.getElementById(`${key}-c-details`).innerHTML = `${t>0?Math.round(cKcal/t*100):0}% &bull; ${cKcal} ккал`;
   });
+  
   document.getElementById("macros-warning").classList.toggle("hidden", !hasLowCarb);
 }
 
@@ -241,6 +449,7 @@ function bindRunningSlicers() {
   const convSpeed = document.getElementById("conv-speed");
   const onPaceInput = () => { lastEditedConvSource = "pace"; handleAutoCalcConv(); };
   const onSpeedInput = () => { lastEditedConvSource = "speed"; handleAutoCalcConv(); };
+  
   convPaceMin.addEventListener("input", onPaceInput);
   convPaceSec.addEventListener("input", onPaceInput);
   convSpeed.addEventListener("input", onSpeedInput);
@@ -260,33 +469,51 @@ function predictTime(vdot, distMeters) {
 }
 
 function calcFact() {
-  if (!activeFactDist) return showError("running-error-box", "running-error-text", { message: "Выберите дистанцию", fields: [] });
-  let s = parsePositiveNumber(document.getElementById("fact-seconds").value);
-  let m = parsePositiveNumber(document.getElementById("fact-minutes").value);
-  let h = parsePositiveNumber(document.getElementById("fact-hours").value);
-  const t = normalizeTime(h, m, s);
-  if (t.s || document.getElementById("fact-seconds").value) document.getElementById("fact-seconds").value = t.s || "";
-  if (t.m || document.getElementById("fact-minutes").value) document.getElementById("fact-minutes").value = t.m || "";
-  if (t.h || document.getElementById("fact-hours").value) document.getElementById("fact-hours").value = t.h || "";
+  if (!activeFactDist) {
+    return showError("running-error-box", "running-error-text", { message: "Выберите дистанцию", fields: [] });
+  }
+
+  const timeRes = readTimeFields({ hoursId: "fact-hours", minutesId: "fact-minutes", secondsId: "fact-seconds" });
+  if (timeRes.error) return showError("running-error-box", "running-error-text", timeRes.error);
 
   let totalKm = 0;
   if (activeFactDist === "custom") {
-    let km = parsePositiveNumber(document.getElementById("fact-km").value);
-    let mt = parsePositiveNumber(document.getElementById("fact-meters").value);
-    if (mt >= 1000) { km += Math.floor(mt / 1000); mt = mt % 1000; }
-    if (mt || document.getElementById("fact-meters").value) document.getElementById("fact-meters").value = mt || "";
-    if (km || document.getElementById("fact-km").value) document.getElementById("fact-km").value = km || "";
-    totalKm = km + mt / 1000;
-  } else { totalKm = parseFloat(activeFactDist); }
+    const distRes = readCustomDistance("fact-km", "fact-meters");
+    if (distRes.error) return showError("running-error-box", "running-error-text", distRes.error);
+    totalKm = distRes.totalKm;
+  } else {
+    totalKm = parseFloat(activeFactDist);
+  }
 
-  const totalSec = t.h * 3600 + t.m * 60 + t.s;
-  if (totalSec <= 0) return showError("running-error-box", "running-error-text", { message: "Укажите время бега", fields: ["fact-minutes"] });
-  if (totalKm <= 0) return showError("running-error-box", "running-error-text", { message: "Укажите дистанцию", fields: ["fact-km"] });
+  const totalSec = timeRes.totalSeconds;
+  if (totalSec <= 0) {
+    return showError("running-error-box", "running-error-text", { message: "Укажите время бега", fields: ["fact-hours", "fact-minutes", "fact-seconds"] });
+  }
+
+  if (totalKm <= 0) {
+    return showError("running-error-box", "running-error-text", { message: "Укажите дистанцию", fields: ["fact-km", "fact-meters"] });
+  }
 
   const paceSec = totalSec / totalKm;
   const paceMinPerKm = paceSec / 60;
-  if (paceMinPerKm > 60) return showError("running-error-box", "running-error-text", { message: "Темп > 60 мин/км", fields: ["fact-minutes"] });
-  if (paceMinPerKm < 0.5) return showError("running-error-box", "running-error-text", { message: "Темп < 30 сек/км", fields: ["fact-minutes"] });
+  if (paceMinPerKm > 60) {
+    return showError("running-error-box", "running-error-text", { message: "Темп > 60 мин/км", fields: ["fact-hours", "fact-minutes", "fact-seconds"] });
+  }
+  if (paceMinPerKm < 0.5) {
+    return showError("running-error-box", "running-error-text", { message: "Темп < 30 сек/км", fields: ["fact-hours", "fact-minutes", "fact-seconds"] });
+  }
+
+  let weight = null;
+  if (hasFieldValue("fact-weight")) {
+    const weightRes = readNumberField("fact-weight", {
+      min: 30,
+      max: 300,
+      label: "Вес",
+      rangeMessage: "Вес: 30–300 кг"
+    });
+    if (weightRes.error) return showError("running-error-box", "running-error-text", weightRes.error);
+    weight = weightRes.value;
+  }
 
   const speed = totalKm / (totalSec / 3600);
   document.getElementById("res-pace-value").textContent = formatPace(paceSec);
@@ -300,11 +527,12 @@ function calcFact() {
     { id: "pred-10k", lossId: "wloss-10k", gainId: "wgain-10k", km: 10 },
     { id: "pred-21k", lossId: "wloss-21k", gainId: "wgain-21k", km: 21.0975 }
   ];
-  predDistances.forEach(d => { document.getElementById(d.id).textContent = formatTime(predictTime(vdot, d.km * 1000) * 60); });
+  
+  predDistances.forEach(d => {
+    document.getElementById(d.id).textContent = formatTime(predictTime(vdot, d.km * 1000) * 60);
+  });
 
-  const weight = parsePositiveNumber(document.getElementById("fact-weight").value);
-  const hasWeight = weight >= 30 && weight <= 300;
-  if (hasWeight) {
+  if (weight !== null) {
     const vdotLoss = vdot * (weight / (weight - 5));
     const vdotGain = vdot * (weight / (weight + 5));
     predDistances.forEach(d => {
@@ -317,36 +545,46 @@ function calcFact() {
     document.getElementById("weight-loss-block").classList.add("hidden");
     document.getElementById("weight-gain-block").classList.add("hidden");
   }
+
   document.getElementById("run-metrics-standard").classList.remove("hidden");
   document.getElementById("run-metrics-conv").classList.add("hidden");
   document.getElementById("predictions-block").classList.remove("hidden");
 }
 
 function calcTarget() {
-  if (!activeTargetDist) return showError("running-error-box", "running-error-text", { message: "Выберите дистанцию", fields: [] });
+  if (!activeTargetDist) {
+    return showError("running-error-box", "running-error-text", { message: "Выберите дистанцию", fields: [] });
+  }
+
   let totalKm = 0;
   if (activeTargetDist === "custom") {
-    let km = parsePositiveNumber(document.getElementById("target-km").value);
-    let mt = parsePositiveNumber(document.getElementById("target-meters").value);
-    if (mt >= 1000) { km += Math.floor(mt / 1000); mt = mt % 1000; }
-    if (mt || document.getElementById("target-meters").value) document.getElementById("target-meters").value = mt || "";
-    if (km || document.getElementById("target-km").value) document.getElementById("target-km").value = km || "";
-    totalKm = km + mt / 1000;
-  } else { totalKm = parseFloat(activeTargetDist); }
+    const distRes = readCustomDistance("target-km", "target-meters");
+    if (distRes.error) return showError("running-error-box", "running-error-text", distRes.error);
+    totalKm = distRes.totalKm;
+  } else {
+    totalKm = parseFloat(activeTargetDist);
+  }
 
-  let s = parsePositiveNumber(document.getElementById("target-seconds").value);
-  let m = parsePositiveNumber(document.getElementById("target-minutes").value);
-  let h = parsePositiveNumber(document.getElementById("target-hours").value);
-  const t = normalizeTime(h, m, s);
-  if (t.s || document.getElementById("target-seconds").value) document.getElementById("target-seconds").value = t.s || "";
-  if (t.m || document.getElementById("target-minutes").value) document.getElementById("target-minutes").value = t.m || "";
-  if (t.h || document.getElementById("target-hours").value) document.getElementById("target-hours").value = t.h || "";
-  const totalSec = t.h * 3600 + t.m * 60 + t.s;
+  const timeRes = readTimeFields({ hoursId: "target-hours", minutesId: "target-minutes", secondsId: "target-seconds" });
+  if (timeRes.error) return showError("running-error-box", "running-error-text", timeRes.error);
 
-  if (totalKm <= 0) return showError("running-error-box", "running-error-text", { message: "Укажите дистанцию", fields: ["target-km"] });
-  if (totalSec <= 0) return showError("running-error-box", "running-error-text", { message: "Укажите желаемое время", fields: ["target-minutes"] });
+  const totalSec = timeRes.totalSeconds;
+  if (totalKm <= 0) {
+    return showError("running-error-box", "running-error-text", { message: "Укажите дистанцию", fields: ["target-km", "target-meters"] });
+  }
+  if (totalSec <= 0) {
+    return showError("running-error-box", "running-error-text", { message: "Укажите желаемое время", fields: ["target-hours", "target-minutes", "target-seconds"] });
+  }
 
   const paceSec = totalSec / totalKm;
+  const paceMinPerKm = paceSec / 60;
+  if (paceMinPerKm > 60) {
+    return showError("running-error-box", "running-error-text", { message: "Темп > 60 мин/км", fields: ["target-hours", "target-minutes", "target-seconds"] });
+  }
+  if (paceMinPerKm < 0.5) {
+    return showError("running-error-box", "running-error-text", { message: "Темп < 30 сек/км", fields: ["target-hours", "target-minutes", "target-seconds"] });
+  }
+
   const speed = totalKm / (totalSec / 3600);
   document.getElementById("res-pace-value").textContent = formatPace(paceSec);
   document.getElementById("res-speed-value").textContent = speed.toFixed(2);
@@ -358,45 +596,78 @@ function calcTarget() {
 }
 
 let convTimeout;
-function handleAutoCalcConv() { clearTimeout(convTimeout); convTimeout = setTimeout(calcConv, 300); }
-
-function calcConv() {
+function handleAutoCalcConv() {
   clearErrors();
+  clearTimeout(convTimeout);
+  convTimeout = setTimeout(() => calcConv(true), 300);
+}
+
+function calcConv(silent = false) {
+  if (!silent) clearErrors();
+
   const vLabel = document.getElementById("conv-res-label");
   const vMain = document.getElementById("conv-res-value");
   const vUnit = document.getElementById("conv-res-unit");
   const vSub = document.getElementById("conv-res-sub");
 
+  const fail = (errorObj) => {
+    document.getElementById("run-metrics-standard").classList.add("hidden");
+    document.getElementById("predictions-block").classList.add("hidden");
+    document.getElementById("weight-loss-block").classList.add("hidden");
+    document.getElementById("weight-gain-block").classList.add("hidden");
+    document.getElementById("run-metrics-conv").classList.add("hidden");
+    if (!silent && errorObj) {
+      showError("running-error-box", "running-error-text", errorObj);
+    }
+    return null;
+  };
+
   if (lastEditedConvSource === "pace") {
-    let m = parsePositiveNumber(document.getElementById("conv-pace-min").value);
-    let s = parsePositiveNumber(document.getElementById("conv-pace-sec").value);
-    if (!m && !s) return;
-    if (s >= 60) { m += Math.floor(s / 60); s = s % 60; }
-    if (s || document.getElementById("conv-pace-sec").value) document.getElementById("conv-pace-sec").value = s || "";
-    if (m || document.getElementById("conv-pace-min").value) document.getElementById("conv-pace-min").value = m || "";
-    const totalSecPerKm = m * 60 + s;
-    if (totalSecPerKm <= 0 || totalSecPerKm < 30 || totalSecPerKm > 3600) return;
+    const pace = parsePaceInput("conv-pace-min", "conv-pace-sec");
+    if (pace.error) return fail(pace.error);
+    if (pace.empty) return fail(null);
+
+    const totalSecPerKm = pace.total;
+    if (totalSecPerKm < 30 || totalSecPerKm > 3600) {
+      return fail({ message: "Темп: 0:30 – 60:00 мин/км", fields: ["conv-pace-min", "conv-pace-sec"] });
+    }
+
     const speed = 3600 / totalSecPerKm;
-    vLabel.textContent = "Скорость"; vMain.textContent = speed.toFixed(2); vUnit.textContent = "км/ч";
+    vLabel.textContent = "Скорость";
+    vMain.textContent = speed.toFixed(2);
+    vUnit.textContent = "км/ч";
     vSub.textContent = `Округленно для дорожки: ${(Math.round(speed * 10) / 10).toFixed(1)}`;
   } else {
-    let speed = parsePositiveNumber(document.getElementById("conv-speed").value);
-    if (!speed || speed > 120 || speed < 1) return;
-    const totalSecPerKm = 3600 / speed;
-    vLabel.textContent = "Темп"; vMain.textContent = formatPace(totalSecPerKm); vUnit.textContent = "мин/км"; vSub.textContent = "";
+    const speedRes = readNumberField("conv-speed", {
+      min: 1,
+      max: 120,
+      label: "Скорость",
+      rangeMessage: "Скорость: 1–120 км/ч"
+    });
+    if (speedRes.error) return fail(speedRes.error);
+    if (speedRes.value === null) return fail(null);
+
+    const totalSecPerKm = 3600 / speedRes.value;
+    vLabel.textContent = "Темп";
+    vMain.textContent = formatPace(totalSecPerKm);
+    vUnit.textContent = "мин/км";
+    vSub.textContent = "";
   }
+
   document.getElementById("run-metrics-standard").classList.add("hidden");
   document.getElementById("predictions-block").classList.add("hidden");
   document.getElementById("weight-loss-block").classList.add("hidden");
   document.getElementById("weight-gain-block").classList.add("hidden");
   document.getElementById("run-metrics-conv").classList.remove("hidden");
+  return true;
 }
 
 function calculateRunning() {
   clearErrors();
   if (activeRunMode === "fact") calcFact();
   else if (activeRunMode === "target") calcTarget();
-  else if (activeRunMode === "conv") calcConv();
+  else if (activeRunMode === "conv") calcConv(false);
+  
   if (document.getElementById("running-error-box").classList.contains("hidden")) {
     triggerUpdateAnimation(".running-res .m-value");
     scrollToElement("running-result");
@@ -421,6 +692,7 @@ function bindPanoSlicers() {
       clearErrors();
     });
   });
+  
   document.querySelectorAll(".macro-slicer[data-test-input]").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".macro-slicer[data-test-input]").forEach(b => b.classList.remove("active"));
@@ -430,11 +702,13 @@ function bindPanoSlicers() {
       document.getElementById("test-pace-input").classList.toggle("hidden", activeTestInput !== "pace");
     });
   });
+  
   const hintBtn = document.getElementById("pano-hint-btn");
   const hintBody = document.getElementById("pano-hint-body");
   if (hintBtn && hintBody) {
     hintBtn.addEventListener("click", () => { hintBody.classList.toggle("hidden"); hintBtn.classList.toggle("expanded"); });
   }
+  
   document.getElementById("pano-copy-btn")?.addEventListener("click", () => {
     copyToClipboard(buildPanoResultText(), document.getElementById("pano-copy-btn"), "Скопировать результат");
   });
@@ -442,30 +716,74 @@ function bindPanoSlicers() {
 
 function calculatePano() {
   clearErrors();
-  let thresholdPaceSec, lthr;
+  let thresholdPaceSec;
+  let lthr;
 
   if (activePanoMode === "direct") {
     const pace = parsePaceInput("pano-pace-min", "pano-pace-sec");
+    if (pace.error) return showError("pano-error-box", "pano-error-text", pace.error);
+    
+    if (pace.empty) {
+      return showError("pano-error-box", "pano-error-text", { message: "Укажите пороговый темп", fields: ["pano-pace-min", "pano-pace-sec"] });
+    }
+
     thresholdPaceSec = pace.total;
-    lthr = parsePositiveNumber(document.getElementById("pano-hr").value);
-    if (thresholdPaceSec <= 0) return showError("pano-error-box", "pano-error-text", { message: "Укажите пороговый темп", fields: ["pano-pace-min", "pano-pace-sec"] });
-    if (thresholdPaceSec < PANO_MIN_PACE || thresholdPaceSec > PANO_MAX_PACE) return showError("pano-error-box", "pano-error-text", { message: "Темп: 1:30 – 15:00 мин/км", fields: ["pano-pace-min"] });
-    if (!lthr || lthr < PANO_MIN_HR || lthr > PANO_MAX_HR) return showError("pano-error-box", "pano-error-text", { message: "Пульс: 100–220 уд/мин", fields: ["pano-hr"] });
+    const hrRes = readNumberField("pano-hr", {
+      required: true,
+      integer: true,
+      min: PANO_MIN_HR,
+      max: PANO_MAX_HR,
+      label: "Пороговый пульс",
+      requiredMessage: "Укажите пороговый пульс",
+      integerMessage: "Пульс должен быть целым числом",
+      rangeMessage: "Пульс: 100–220 уд/мин"
+    });
+    if (hrRes.error) return showError("pano-error-box", "pano-error-text", hrRes.error);
+    lthr = hrRes.value;
+
+    if (thresholdPaceSec < PANO_MIN_PACE || thresholdPaceSec > PANO_MAX_PACE) {
+      return showError("pano-error-box", "pano-error-text", { message: "Темп: 1:30 – 15:00 мин/км", fields: ["pano-pace-min", "pano-pace-sec"] });
+    }
   } else {
     if (activeTestInput === "distance") {
-      const dist = parsePositiveNumber(document.getElementById("test-dist").value);
-      if (!dist) return showError("pano-error-box", "pano-error-text", { message: "Укажите дистанцию", fields: ["test-dist"] });
-      if (dist < 1 || dist > 15) return showError("pano-error-box", "pano-error-text", { message: "Дистанция: 1–15 км", fields: ["test-dist"] });
-      thresholdPaceSec = 1800 / dist;
+      const distRes = readNumberField("test-dist", {
+        required: true,
+        min: 1,
+        max: 15,
+        label: "Дистанция",
+        requiredMessage: "Укажите дистанцию",
+        rangeMessage: "Дистанция: 1–15 км"
+      });
+      if (distRes.error) return showError("pano-error-box", "pano-error-text", distRes.error);
+      thresholdPaceSec = 1800 / distRes.value;
     } else {
       const pace = parsePaceInput("test-pace-min", "test-pace-sec");
+      if (pace.error) return showError("pano-error-box", "pano-error-text", pace.error);
+      
+      if (pace.empty) {
+        return showError("pano-error-box", "pano-error-text", { message: "Укажите средний темп", fields: ["test-pace-min", "test-pace-sec"] });
+      }
       thresholdPaceSec = pace.total;
-      if (thresholdPaceSec <= 0) return showError("pano-error-box", "pano-error-text", { message: "Укажите средний темп", fields: ["test-pace-min", "test-pace-sec"] });
     }
-    if (thresholdPaceSec < PANO_MIN_PACE || thresholdPaceSec > PANO_MAX_PACE) return showError("pano-error-box", "pano-error-text", { message: "Рассчитанный темп вне диапазона (1:30 – 15:00)", fields: [] });
-    lthr = parsePositiveNumber(document.getElementById("test-hr").value);
-    if (!lthr || lthr < PANO_MIN_HR || lthr > PANO_MAX_HR) return showError("pano-error-box", "pano-error-text", { message: "Пульс: 100–220 уд/мин", fields: ["test-hr"] });
+
+    if (thresholdPaceSec < PANO_MIN_PACE || thresholdPaceSec > PANO_MAX_PACE) {
+      return showError("pano-error-box", "pano-error-text", { message: "Рассчитанный темп вне диапазона (1:30 – 15:00)", fields: [] });
+    }
+
+    const hrRes = readNumberField("test-hr", {
+      required: true,
+      integer: true,
+      min: PANO_MIN_HR,
+      max: PANO_MAX_HR,
+      label: "Средний пульс",
+      requiredMessage: "Укажите средний пульс",
+      integerMessage: "Пульс должен быть целым числом",
+      rangeMessage: "Пульс: 100–220 уд/мин"
+    });
+    if (hrRes.error) return showError("pano-error-box", "pano-error-text", hrRes.error);
+    lthr = hrRes.value;
   }
+
   renderPanoResults(thresholdPaceSec, Math.round(lthr));
 }
 
@@ -473,12 +791,15 @@ function renderPanoResults(paceSec, lthr) {
   document.getElementById("pano-res-pace").textContent = formatPace(paceSec);
   document.getElementById("pano-res-speed").textContent = (3600 / paceSec).toFixed(2);
   document.getElementById("pano-res-hr").textContent = String(lthr);
+  
   renderHRZones(lthr);
   renderPaceZones(paceSec);
+  
   document.getElementById("pano-result").classList.remove("hidden");
   document.getElementById("pano-hr-zones").classList.remove("hidden");
   document.getElementById("pano-pace-zones").classList.remove("hidden");
   document.getElementById("pano-copy-btn").classList.remove("hidden");
+  
   triggerUpdateAnimation("#pano-result .m-value");
   scrollToElement("pano-result");
 }
@@ -585,24 +906,53 @@ function fuelSodiumRange(condition) {
 function calculateFuel() {
   clearErrors();
 
-  if (!activeFuelActivity) return showError("fuel-error-box", "fuel-error-text", { message: "Выберите вид активности", fields: [] });
+  if (!["run", "bike", "tri", "training", "race"].includes(activeFuelActivity)) {
+    return showError("fuel-error-box", "fuel-error-text", { message: "Выберите вид активности", fields: [] });
+  }
 
-  const h = parsePositiveNumber(document.getElementById("fuel-hours").value);
-  const m = parsePositiveNumber(document.getElementById("fuel-minutes").value);
-  const durationMin = h * 60 + m;
-  if (durationMin <= 0) return showError("fuel-error-box", "fuel-error-text", { message: "Укажите длительность", fields: ["fuel-hours", "fuel-minutes"] });
-  if (durationMin > 1440) return showError("fuel-error-box", "fuel-error-text", { message: "Длительность не более 24 ч", fields: ["fuel-hours"] });
+  if (!["cool", "moderate", "hot"].includes(activeFuelCondition)) {
+    return showError("fuel-error-box", "fuel-error-text", { message: "Недопустимое значение поля «Условия»", fields: [] });
+  }
 
-  const weightKg = parsePositiveNumber(document.getElementById("fuel-weight").value);
-  if (!weightKg || weightKg < 30 || weightKg > 200) return showError("fuel-error-box", "fuel-error-text", { message: "Масса тела: 30–200 кг", fields: ["fuel-weight"] });
+  if (!["low", "moderate", "high"].includes(activeFuelIntensity)) {
+    return showError("fuel-error-box", "fuel-error-text", { message: "Недопустимое значение поля «Интенсивность»", fields: [] });
+  }
+
+  const durationRes = readTimeFields({ hoursId: "fuel-hours", minutesId: "fuel-minutes", maxHours: 24 });
+  if (durationRes.error) return showError("fuel-error-box", "fuel-error-text", durationRes.error);
+
+  const durationMin = durationRes.h * 60 + durationRes.m;
+  if (durationMin <= 0) {
+    return showError("fuel-error-box", "fuel-error-text", { message: "Укажите длительность", fields: ["fuel-hours", "fuel-minutes"] });
+  }
+  if (durationMin > 1440) {
+    return showError("fuel-error-box", "fuel-error-text", { message: "Длительность не более 24 ч", fields: ["fuel-hours"] });
+  }
+
+  const weightRes = readNumberField("fuel-weight", {
+    required: true,
+    min: 30,
+    max: 200,
+    label: "Масса тела",
+    requiredMessage: "Укажите массу тела",
+    rangeMessage: "Масса тела: 30–200 кг"
+  });
+  if (weightRes.error) return showError("fuel-error-box", "fuel-error-text", weightRes.error);
+  const weightKg = weightRes.value;
 
   let sweatRate = 0;
-  const sweatVal = document.getElementById("fuel-sweat").value.trim();
-  if (sweatVal !== "" && sweatVal !== "0") {
-    sweatRate = parsePositiveNumber(sweatVal);
-    if (sweatRate && (sweatRate < 200 || sweatRate > 3000)) {
-      return showError("fuel-error-box", "fuel-error-text", { message: "Потоотделение: 200–3000 мл/час", fields: ["fuel-sweat"] });
-    }
+  if (hasFieldValue("fuel-sweat")) {
+    const sweatRes = readNumberField("fuel-sweat", {
+      integer: true,
+      min: 200,
+      max: 3000,
+      allowZero: true,
+      label: "Потоотделение",
+      integerMessage: "Потоотделение должно быть целым числом",
+      rangeMessage: "Потоотделение: 200–3000 мл/час"
+    });
+    if (sweatRes.error) return showError("fuel-error-box", "fuel-error-text", sweatRes.error);
+    sweatRate = sweatRes.value;
   }
 
   const durationHrs = durationMin / 60;
@@ -632,7 +982,6 @@ function calculateFuel() {
 }
 
 function renderFuelResults(p) {
-  // Summary card
   let summaryNotes = "";
   if (p.durationMin <= 60 && p.intensity === "high") {
     summaryNotes = `<div class="fuel-note">При нагрузке до 60 мин можно обойтись <strong>полосканием рта</strong> углеводным напитком (mouth rinse) или небольшим количеством геля.</div>`;
@@ -640,7 +989,7 @@ function renderFuelResults(p) {
   if (p.durationMin > 180) {
     summaryNotes += `<div class="fuel-note">Верхние значения (80–90 г/ч) актуальны для <strong>тренированного ЖКТ</strong>. Увеличивайте постепенно.</div>`;
   }
-  if (p.fluid.fromSweat) {
+  if (p.fluid.fromSweat && p.fluid.sweatRate > 0) {
     summaryNotes += `<div class="fuel-note">Потери: ~${p.fluid.sweatRate} мл/ч. Рекомендуется восполнять <strong>60–80%</strong> потерь. Не пейте больше, чем теряете.</div>`;
   }
 
@@ -665,9 +1014,9 @@ function renderFuelResults(p) {
     </div>
     ${summaryNotes}`;
 
-  // Timeline
-  const carbsEvery = Math.round(p.carbsMid / (60 / 25));  // ~every 25 min
-  const fluidEvery = Math.round(p.fluidMid / (60 / 17));  // ~every 17 min
+  const carbsEvery = Math.round(p.carbsMid / (60 / 25)); 
+  const fluidEvery = Math.round(p.fluidMid / (60 / 17)); 
+  
   document.getElementById("fuel-timeline").innerHTML = `
     <h3 class="fuel-section-title">План по ходу нагрузки</h3>
     <div class="fuel-plan-row">
@@ -692,7 +1041,6 @@ function renderFuelResults(p) {
       </div>
     </div>`;
 
-  // Gear
   document.getElementById("fuel-gear").innerHTML = `
     <h3 class="fuel-section-title">Что взять с собой</h3>
     <div class="fuel-gear-grid">
@@ -702,11 +1050,11 @@ function renderFuelResults(p) {
       <div class="fuel-gear-item"><div class="fuel-gear-val">${p.totalSodium} мг</div><div class="fuel-gear-label">натрия всего</div></div>
     </div>`;
 
-  // Pre/Post
   const preCarbsLo = Math.round(weightToNum(p.weightKg) * 1);
   const preCarbsHi = Math.round(weightToNum(p.weightKg) * 4);
   const postCarbsLo = Math.round(weightToNum(p.weightKg) * 1.0);
   const postCarbsHi = Math.round(weightToNum(p.weightKg) * 1.2);
+  
   document.getElementById("fuel-pre-post").innerHTML = `
     <div class="fuel-tip-block">
       <div class="fuel-tip-title">⏱ Перед стартом (1–4 ч)</div>
@@ -719,6 +1067,7 @@ function renderFuelResults(p) {
 
   document.getElementById("fuel-results-wrap").classList.remove("hidden");
   document.getElementById("fuel-copy-btn").classList.remove("hidden");
+  
   triggerUpdateAnimation("#fuel-summary .fuel-hero-val");
   scrollToElement("fuel-summary");
 }
@@ -740,14 +1089,12 @@ function buildFuelResultText() {
 
   let text = "🔋 Fueling & Hydration\n\n";
 
-  // Hero values
   const heroItems = s.querySelectorAll(".fuel-hero-item");
   heroItems.forEach(item => {
     text += `${item.querySelector(".fuel-hero-label").textContent}: ${item.querySelector(".fuel-hero-val").textContent} ${item.querySelector(".fuel-hero-unit").textContent}\n`;
   });
   text += "\n";
 
-  // Plan
   text += "📋 План\n";
   t.querySelectorAll(".fuel-plan-row").forEach(row => {
     text += `${row.querySelector(".fuel-plan-title").textContent}\n`;
@@ -755,13 +1102,11 @@ function buildFuelResultText() {
   });
   text += "\n";
 
-  // Gear
   text += "🎒 С собой\n";
   g.querySelectorAll(".fuel-gear-item").forEach(item => {
     text += `${item.querySelector(".fuel-gear-val").textContent} — ${item.querySelector(".fuel-gear-label").textContent}\n`;
   });
 
-  // Pre/post
   const tips = document.querySelectorAll("#fuel-pre-post .fuel-tip-block");
   if (tips.length) {
     text += "\n";
@@ -797,7 +1142,6 @@ function initTelegram() {
 function initApp() {
   tabButtons.forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
 
-  // Calorie macro slicers (exclude all other data-* slicers)
   document.querySelectorAll(".macro-slicer:not([data-run-mode]):not([data-pano-mode]):not([data-test-input])").forEach(btn => {
     if (!btn.dataset.macroTab) return;
     btn.addEventListener("click", () => {

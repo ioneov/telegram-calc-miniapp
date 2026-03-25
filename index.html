@@ -48,7 +48,6 @@
       </button>
     </nav>
 
-    <!-- ==================== CALORIES TAB ==================== -->
     <section id="tab-calories" class="tab-panel active">
       <div class="calc-card">
         <section class="form-side">
@@ -63,15 +62,15 @@
               </label>
               <label>
                 <span class="field-label">Возраст</span>
-                <input id="age" type="number" inputmode="numeric" min="18" max="100" step="1" placeholder="25" />
+                <input id="age" type="number" autocomplete="off" inputmode="numeric" min="18" max="100" step="1" placeholder="25" />
               </label>
               <label>
                 <span class="field-label">Рост, см</span>
-                <input id="height" type="number" inputmode="decimal" min="100" max="250" placeholder="175" />
+                <input id="height" type="number" autocomplete="off" inputmode="numeric" min="100" max="250" step="1" placeholder="175" />
               </label>
               <label>
                 <span class="field-label">Вес, кг</span>
-                <input id="weight" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="70" />
+                <input id="weight" type="number" autocomplete="off" inputmode="decimal" min="30" max="300" step="0.1" placeholder="70" />
               </label>
               <label class="full-width">
                 <span class="field-label">Активность</span>
@@ -146,7 +145,6 @@
       </div>
     </section>
 
-    <!-- ==================== RUNNING TAB ==================== -->
     <section id="tab-running" class="tab-panel">
       <div class="calc-card">
         <section class="form-side">
@@ -159,14 +157,14 @@
           <form id="run-mode-fact" class="form-stack hidden" novalidate>
             <div class="run-input-group">
               <span class="field-label">Ваш вес, кг</span>
-              <input id="fact-weight" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="70" style="max-width:160px;" />
+              <input id="fact-weight" type="number" autocomplete="off" inputmode="decimal" min="30" max="300" step="0.1" placeholder="70" style="max-width:160px;" />
             </div>
             <div class="run-input-group">
               <span class="field-label">Время бега</span>
               <div class="hms-grid">
-                <input id="fact-hours" type="number" inputmode="numeric" min="0" placeholder="0" /><span class="u">ч</span>
-                <input id="fact-minutes" type="number" inputmode="numeric" min="0" placeholder="0" /><span class="u">м</span>
-                <input id="fact-seconds" type="number" inputmode="numeric" min="0" placeholder="0" /><span class="u">с</span>
+                <input id="fact-hours" type="number" autocomplete="off" inputmode="numeric" min="0" step="1" placeholder="0" /><span class="u">ч</span>
+                <input id="fact-minutes" type="number" autocomplete="off" inputmode="numeric" min="0" max="59" step="1" placeholder="0" /><span class="u">м</span>
+                <input id="fact-seconds" type="number" autocomplete="off" inputmode="numeric" min="0" max="59" step="1" placeholder="0" /><span class="u">с</span>
               </div>
             </div>
             <div class="run-input-group">
@@ -181,8 +179,8 @@
                 <button type="button" class="chip" data-val="custom">Своя</button>
               </div>
               <div class="dist-grid hidden mt-8" id="fact-custom-dist">
-                <input id="fact-km" type="number" inputmode="decimal" min="0" placeholder="0" /><span class="u">км</span>
-                <input id="fact-meters" type="number" inputmode="numeric" min="0" placeholder="0" /><span class="u">м</span>
+                <input id="fact-km" type="number" autocomplete="off" inputmode="decimal" min="0" step="0.001" placeholder="0" /><span class="u">км</span>
+                <input id="fact-meters" type="number" autocomplete="off" inputmode="numeric" min="0" max="999" step="1" placeholder="0" /><span class="u">м</span>
               </div>
             </div>
           </form>
@@ -200,16 +198,16 @@
                 <button type="button" class="chip" data-val="custom">Своя</button>
               </div>
               <div class="dist-grid hidden mt-8" id="target-custom-dist">
-                <input id="target-km" type="number" inputmode="decimal" min="0" placeholder="0" /><span class="u">км</span>
-                <input id="target-meters" type="number" inputmode="numeric" min="0" placeholder="0" /><span class="u">м</span>
+                <input id="target-km" type="number" autocomplete="off" inputmode="decimal" min="0" step="0.001" placeholder="0" /><span class="u">км</span>
+                <input id="target-meters" type="number" autocomplete="off" inputmode="numeric" min="0" max="999" step="1" placeholder="0" /><span class="u">м</span>
               </div>
             </div>
             <div class="run-input-group">
               <span class="field-label">Желаемое время</span>
               <div class="hms-grid">
-                <input id="target-hours" type="number" inputmode="numeric" min="0" placeholder="0" /><span class="u">ч</span>
-                <input id="target-minutes" type="number" inputmode="numeric" min="0" placeholder="0" /><span class="u">м</span>
-                <input id="target-seconds" type="number" inputmode="numeric" min="0" placeholder="0" /><span class="u">с</span>
+                <input id="target-hours" type="number" autocomplete="off" inputmode="numeric" min="0" step="1" placeholder="0" /><span class="u">ч</span>
+                <input id="target-minutes" type="number" autocomplete="off" inputmode="numeric" min="0" max="59" step="1" placeholder="0" /><span class="u">м</span>
+                <input id="target-seconds" type="number" autocomplete="off" inputmode="numeric" min="0" max="59" step="1" placeholder="0" /><span class="u">с</span>
               </div>
             </div>
           </form>
@@ -219,8 +217,8 @@
               <label>
                 <span class="field-label">Темп (мин/км)</span>
                 <div class="hms-grid" style="margin-top:0;">
-                  <input id="conv-pace-min" type="number" inputmode="numeric" min="0" placeholder="5" /><span class="u">:</span>
-                  <input id="conv-pace-sec" type="number" inputmode="numeric" min="0" placeholder="00" />
+                  <input id="conv-pace-min" type="number" autocomplete="off" inputmode="numeric" min="0" step="1" placeholder="5" /><span class="u">:</span>
+                  <input id="conv-pace-sec" type="number" autocomplete="off" inputmode="numeric" min="0" max="59" step="1" placeholder="00" />
                 </div>
               </label>
               <div class="conv-icon-wrap">
@@ -230,7 +228,7 @@
               </div>
               <label>
                 <span class="field-label">Скорость (км/ч)</span>
-                <input id="conv-speed" type="number" inputmode="decimal" min="0" step="0.1" placeholder="12.0" />
+                <input id="conv-speed" type="number" autocomplete="off" inputmode="decimal" min="0" step="0.1" placeholder="12.0" />
               </label>
             </div>
           </form>
@@ -281,7 +279,6 @@
       </div>
     </section>
 
-    <!-- ==================== PANO TAB ==================== -->
     <section id="tab-pano" class="tab-panel">
       <div class="calc-card">
         <section class="form-side">
@@ -294,13 +291,13 @@
               <label>
                 <span class="field-label">Пороговый темп</span>
                 <div class="hms-grid" style="margin-top:0;">
-                  <input id="pano-pace-min" type="number" inputmode="numeric" min="0" placeholder="5" /><span class="u">:</span>
-                  <input id="pano-pace-sec" type="number" inputmode="numeric" min="0" placeholder="00" />
+                  <input id="pano-pace-min" type="number" autocomplete="off" inputmode="numeric" min="0" step="1" placeholder="5" /><span class="u">:</span>
+                  <input id="pano-pace-sec" type="number" autocomplete="off" inputmode="numeric" min="0" max="59" step="1" placeholder="00" />
                 </div>
               </label>
               <label>
                 <span class="field-label">Пороговый пульс</span>
-                <input id="pano-hr" type="number" inputmode="numeric" min="100" max="220" placeholder="165" />
+                <input id="pano-hr" type="number" autocomplete="off" inputmode="numeric" min="100" max="220" step="1" placeholder="165" />
                 <span class="field-hint">уд/мин</span>
               </label>
             </div>
@@ -318,15 +315,15 @@
               <button type="button" class="macro-slicer" data-test-input="pace">Средний темп</button>
             </div>
             <div id="test-distance-input" class="mt-12">
-              <label><span class="field-label">Дистанция за 30 мин, км</span><input id="test-dist" type="number" inputmode="decimal" min="0" step="0.01" placeholder="5.50" style="max-width:160px;" /></label>
+              <label><span class="field-label">Дистанция за 30 мин, км</span><input id="test-dist" type="number" autocomplete="off" inputmode="decimal" min="0" step="0.01" placeholder="5.50" style="max-width:160px;" /></label>
             </div>
             <div id="test-pace-input" class="hidden mt-12">
               <label><span class="field-label">Средний темп за тест</span>
-                <div class="hms-grid" style="margin-top:0;"><input id="test-pace-min" type="number" inputmode="numeric" min="0" placeholder="5" /><span class="u">:</span><input id="test-pace-sec" type="number" inputmode="numeric" min="0" placeholder="27" /></div>
+                <div class="hms-grid" style="margin-top:0;"><input id="test-pace-min" type="number" autocomplete="off" inputmode="numeric" min="0" step="1" placeholder="5" /><span class="u">:</span><input id="test-pace-sec" type="number" autocomplete="off" inputmode="numeric" min="0" max="59" step="1" placeholder="27" /></div>
               </label>
             </div>
             <div class="mt-12">
-              <label><span class="field-label">Средний пульс (последние 20 мин)</span><input id="test-hr" type="number" inputmode="numeric" min="100" max="220" placeholder="168" style="max-width:160px;" /><span class="field-hint">уд/мин</span></label>
+              <label><span class="field-label">Средний пульс (последние 20 мин)</span><input id="test-hr" type="number" autocomplete="off" inputmode="numeric" min="100" max="220" step="1" placeholder="168" style="max-width:160px;" /><span class="field-hint">уд/мин</span></label>
             </div>
           </form>
           <div id="pano-error-box" class="error-box hidden"><p id="pano-error-text"></p></div>
@@ -345,7 +342,6 @@
       </div>
     </section>
 
-    <!-- ==================== FUELING TAB ==================== -->
     <section id="tab-fuel" class="tab-panel">
       <div class="calc-card">
         <section class="form-side">
@@ -363,18 +359,18 @@
             <div class="run-input-group">
               <span class="field-label">Длительность</span>
               <div class="hms-grid">
-                <input id="fuel-hours" type="number" inputmode="numeric" min="0" placeholder="1" /><span class="u">ч</span>
-                <input id="fuel-minutes" type="number" inputmode="numeric" min="0" placeholder="30" /><span class="u">м</span>
+                <input id="fuel-hours" type="number" autocomplete="off" inputmode="numeric" min="0" max="24" step="1" placeholder="1" /><span class="u">ч</span>
+                <input id="fuel-minutes" type="number" autocomplete="off" inputmode="numeric" min="0" max="59" step="1" placeholder="30" /><span class="u">м</span>
               </div>
             </div>
             <div class="fields-grid">
               <label>
                 <span class="field-label">Масса тела, кг</span>
-                <input id="fuel-weight" type="number" inputmode="decimal" min="30" max="200" step="0.1" placeholder="70" />
+                <input id="fuel-weight" type="number" autocomplete="off" inputmode="decimal" min="30" max="200" step="0.1" placeholder="70" />
               </label>
               <label>
                 <span class="field-label">Потоотделение</span>
-                <input id="fuel-sweat" type="number" inputmode="numeric" min="0" max="3000" placeholder="—" />
+                <input id="fuel-sweat" type="number" autocomplete="off" inputmode="numeric" min="200" max="3000" step="1" placeholder="—" />
                 <span class="field-hint">мл/час, необязательно</span>
               </label>
             </div>
