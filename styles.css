@@ -184,6 +184,12 @@ input:focus, select:focus { border-color: var(--accent); }
 .fuel-tip-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
 .fuel-tip-text { font-size: 13px; color: #48484a; line-height: 1.5; }
 
+
+/* ==================== REALISM MODULE ==================== */
+
+.realism-badge-wrap { display: flex; }
+.realism-badge { display: inline-block; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+
 /* ==================== RESPONSIVE ==================== */
 
 @media (max-width: 420px) {
