@@ -271,16 +271,17 @@ function parsePaceInput(minId, secId) {
   return { min: m, sec: s, total: m * 60 + s, empty: false };
 }
 
-/** Generic clipboard copy with fallback */
-function copyToClipboard(text, btn, defaultLabel) {
+/** Generic clipboard copy with fallback and innerHTML preservation */
+function copyToClipboard(text, btn) {
+  const originalHTML = btn.innerHTML;
   const onSuccess = () => {
-    btn.textContent = "✓ Скопировано";
+    btn.innerHTML = "✓ Скопировано";
     btn.classList.add("copied");
-    setTimeout(() => { btn.textContent = defaultLabel; btn.classList.remove("copied"); }, 2000);
+    setTimeout(() => { btn.innerHTML = originalHTML; btn.classList.remove("copied"); }, 2000);
   };
   const onFail = () => {
-    btn.textContent = "Не удалось скопировать";
-    setTimeout(() => { btn.textContent = defaultLabel; }, 2000);
+    btn.innerHTML = "Не удалось скопировать";
+    setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
   };
 
   navigator.clipboard.writeText(text).then(onSuccess).catch(() => {
@@ -822,7 +823,7 @@ function bindPanoSlicers() {
     hintBtn.addEventListener("click", () => { hintBody.classList.toggle("hidden"); hintBtn.classList.toggle("expanded"); });
   }
   document.getElementById("pano-copy-btn")?.addEventListener("click", () => {
-    copyToClipboard(buildPanoResultText(), document.getElementById("pano-copy-btn"), "Скопировать результат");
+    copyToClipboard(buildPanoResultText(), document.getElementById("pano-copy-btn"));
   });
 }
 
@@ -948,7 +949,7 @@ function bindFuelChips() {
   bind("fuel-intensity-chips", "intensity");
 
   document.getElementById("fuel-copy-btn")?.addEventListener("click", () => {
-    copyToClipboard(buildFuelResultText(), document.getElementById("fuel-copy-btn"), "Скопировать план");
+    copyToClipboard(buildFuelResultText(), document.getElementById("fuel-copy-btn"));
   });
 }
 

@@ -20,13 +20,18 @@
     <nav class="modern-tabs">
       <button type="button" class="tab-item active" id="tab-calories-btn" data-tab="calories">
         <div class="tab-icon-card">
-          <img src="kkal-svg.svg" alt="Калории" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+          </svg>
         </div>
       </button>
 
       <button type="button" class="tab-item" id="tab-running-btn" data-tab="running">
         <div class="tab-icon-card">
-          <img src="run-svg.svg" alt="Бег" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
         </div>
       </button>
 
@@ -37,7 +42,6 @@
           </svg>
         </div>
       </button>
-
 
       <button type="button" class="tab-item" id="tab-realism-btn" data-tab="realism">
         <div class="tab-icon-card">
@@ -59,7 +63,6 @@
       </button>
     </nav>
 
-    <!-- ==================== CALORIES TAB ==================== -->
     <section id="tab-calories" class="tab-panel active">
       <div class="calc-card">
         <section class="form-side">
@@ -157,7 +160,6 @@
       </div>
     </section>
 
-    <!-- ==================== RUNNING TAB ==================== -->
     <section id="tab-running" class="tab-panel">
       <div class="calc-card">
         <section class="form-side">
@@ -171,6 +173,7 @@
             <div class="run-input-group">
               <span class="field-label">Ваш вес, кг</span>
               <input id="fact-weight" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="70" style="max-width:160px;" />
+              <span class="field-hint">Опционально. Для прогноза влияния веса на результат.</span>
             </div>
             <div class="run-input-group">
               <span class="field-label">Время бега</span>
@@ -292,7 +295,6 @@
       </div>
     </section>
 
-    <!-- ==================== PANO TAB ==================== -->
     <section id="tab-pano" class="tab-panel">
       <div class="calc-card">
         <section class="form-side">
@@ -308,6 +310,7 @@
                   <input id="pano-pace-min" type="number" inputmode="numeric" min="0" step="1" placeholder="5" autocomplete="off" /><span class="u">:</span>
                   <input id="pano-pace-sec" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="00" autocomplete="off" />
                 </div>
+                <span class="field-hint">Макс. темп, который можете держать ~60 мин</span>
               </label>
               <label>
                 <span class="field-label">Пороговый пульс</span>
@@ -350,9 +353,19 @@
             <div class="metric-item full-width-metric"><span class="m-label">Пороговый пульс (LTHR)</span><div class="m-val-wrap"><span class="m-value" id="pano-res-hr">-</span><span class="m-unit">уд/мин</span></div></div>
           </div>
         </section>
-        <section id="pano-hr-zones" class="macros-card hidden"><h3 class="zone-section-title">Пульсовые зоны</h3><div id="pano-hr-zones-table" class="zone-table"></div></section>
-        <section id="pano-pace-zones" class="macros-card hidden"><h3 class="zone-section-title">Темповые зоны</h3><div id="pano-pace-zones-table" class="zone-table"></div></section>
-        <button type="button" id="pano-copy-btn" class="action-btn hidden">Скопировать результат</button>
+        <section id="pano-hr-zones" class="macros-card hidden">
+          <h3 class="zone-section-title">Пульсовые зоны</h3>
+          <div id="pano-hr-zones-table" class="zone-table"></div>
+        </section>
+        <section id="pano-pace-zones" class="macros-card hidden">
+          <h3 class="zone-section-title">Темповые зоны</h3>
+          <div id="pano-pace-zones-table" class="zone-table"></div>
+          
+          <button type="button" id="pano-copy-btn" class="secondary-copy-btn hidden">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Скопировать результат</span>
+          </button>
+        </section>
       </div>
     </section>
 
@@ -362,6 +375,7 @@
           <form id="realism-form" class="form-stack" novalidate>
             <div class="run-input-group">
               <span class="field-label">Контрольный результат (текущая форма)</span>
+              <span class="field-hint" style="margin-bottom: 8px;">Ваш лучший результат (максимальное усилие) за последние 4-8 недель.</span>
               <div class="fields-grid" style="margin-top: 8px;">
                 <label>
                   <select id="realism-cur-dist">
@@ -445,8 +459,6 @@
       </div>
     </section>
 
-
-    <!-- ==================== FUELING TAB ==================== -->
     <section id="tab-fuel" class="tab-panel">
       <div class="calc-card">
         <section class="form-side">
@@ -503,9 +515,16 @@
           <section id="fuel-summary" class="result-banner"></section>
           <section id="fuel-timeline" class="macros-card"></section>
           <section id="fuel-gear" class="macros-card"></section>
-          <section id="fuel-pre-post" class="macros-card"></section>
+          
+          <section class="macros-card">
+            <div id="fuel-pre-post"></div>
+            
+            <button type="button" id="fuel-copy-btn" class="secondary-copy-btn hidden">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <span>Скопировать план</span>
+            </button>
+          </section>
         </div>
-        <button type="button" id="fuel-copy-btn" class="action-btn hidden">Скопировать план</button>
       </div>
     </section>
   </main>
